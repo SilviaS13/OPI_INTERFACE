@@ -1,0 +1,18 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>qtquickcontrols2.conf</file>
+        <file>MusicForm.ui.qml</file>
+        <file>ConnectForm.ui.qml</file>
+        <file>ConfigureForm.ui.qml</file>
+        <file>TimeForm.ui.qml</file>
+        <file>img_lights.jpg</file>
+        <file>inons/error.png</file>
+        <file>inons/link.png</file>
+        <file>inons/plus.png</file>
+        <file>inons/settings-5.png</file>
+        <file>inons/switch-6.png</file>
+        <file>inons/switch-7.png</file>
+        <file>inons/unlink.png</file>
+    </qresource>
+</RCC>
