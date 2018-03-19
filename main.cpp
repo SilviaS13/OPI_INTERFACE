@@ -1,6 +1,6 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
-//#include "bluetooth.h"
+#include "bluetooth.h"
 
 int main(int argc, char *argv[])
 {
@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 
     QQmlApplicationEngine engine;
 
-
+    qmlRegisterType<Bluetooth>("Bluetooth_Module", 1, 0, "Bluetooth");
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
     if (engine.rootObjects().isEmpty())
         return -1;

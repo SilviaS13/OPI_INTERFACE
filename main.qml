@@ -1,7 +1,6 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.2
-//import QtQuick.Controls.Styles 1.4
-
+import Bluetooth_Module 1.0
 
 ApplicationWindow {
     visible: true
@@ -22,6 +21,7 @@ ApplicationWindow {
             background: Rectangle{
                 color: _window._background
             }
+
         }
 
         Time{
@@ -86,6 +86,43 @@ ApplicationWindow {
     //////////////////////////////////////////
     //============ PROPERTIES ==============//
     //////////////////////////////////////////
+    Item {
+            id: devProperties
+//            property int aNumber: 100
+//            property bool aBool: false
+            property string deviceMac: "00:00:00:00:00:00"
+            property string deviceName: "Noname"
+
+            property string connectMac: "00:00:00:00:00:00"
+        }
+
+    Bluetooth{
+        id: bluetoothctl
+        mac_address: devProperties.deviceMac
+        device_name: devProperties.deviceName
+
+        onDevice_foundChanged: {
+            //ПЛЯШЕМ И ДОБАВЛЯЕМ В ЛИСТ ДЕВАЙСОВ
+
+           _devList._devMac.push(bluetoothctl.getMac_address())
+           _devList._devName.push(bluetoothctl.getDevice_name())
+           _devList._devStateImage.push(_devList.unknown)
+
+            conect_form.devListRefresh()
+        }
+    }
+
+    Item{
+        id: _devList
+        property string paired : _btnConf._imgPaired;
+        property string connected : _btnConf._imgLinked;
+        property string unknown : _btnConf._imgUnknown;
+        property variant _devStateImage: []
+        property variant  _devName: []
+        property variant  _devMac: []
+        property int _curIndex: 0
+    }
+
 
     Item {
         id: _window
@@ -99,8 +136,7 @@ ApplicationWindow {
     Item{
         id: _items
         property int _x: (_window._windowWidth - _items._width) /2
-        //property string _fontFamily: "Century Schoolbook L"
-        property string _fontFamily: "sans-serif-thin"
+        property string _fontFamily: "Hack"
         property int _width: 400
     }
 
@@ -122,7 +158,7 @@ ApplicationWindow {
         property string _color: "dimgray"
         property string _fontColor: "white"
         property int _fontPixelSize: Qt.application.font.pixelSize +3
-
+        property string _colorDisabled : "silver"
     }
 
     Item{

@@ -1,9 +1,22 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.2
+import Bluetooth_Module 1.0
 
 Page {
     width: 480
     height: 800
+
+//    Bluetooth{
+//        onDevice_foundChanged: {
+//           _devList._devMac.push(bluetoothctl.getMac_address())
+//           _devList._devName.push(bluetoothctl.getDevice_name())
+//            _devList._devStateImage(_devList.unknown)
+//            devListRefresh()
+//            console.log("FOUND")
+//        }
+//    }
+
+
     header: Label {
             color: _header._color
             font.pixelSize: _header._fontPixelSize
@@ -13,17 +26,8 @@ Page {
 
     }
 
-    Item{
-        id: _devList
-        property string paired : _btnConf._imgPaired;
-        property string connected : _btnConf._imgLinked;
-        property string unknown : _btnConf._imgUnknown;
-        property variant _devStateImage: [paired, connected, unknown ]
-        property variant  _devName: ["Name1", "Name2","Name3"]
-        property variant  _devMac: ["00:00:00:33:33:33", "11:11:11:33:33:33","33:33:33:33:33:33"]
-        property int _curIndex: 0
-    }
 
+    //////////////// : REFRESH DEVICE TABLE
     function devListRefresh(){
         for (var i=devList.count -1; i>=0; i--) {
             devList.remove(i);
@@ -87,10 +91,13 @@ Page {
                             font.pointSize: _list._fontNamePixelSize -4
 
                         }
+                        //////////////// : GET DEVICE MAC TO CONNECT
                         MouseArea{
                             anchors.fill: parent
                             onClicked:{
                                 _devList._curIndex = index
+                                devProperties.deviceMac = _devList._devMac[index]
+                                btnConnect.enabled = true
                                 devListRefresh()
                             }
                         }
@@ -140,7 +147,8 @@ Page {
         topPadding: 6
         focusPolicy: Qt.NoFocus
         onClicked: {
-            //bluetoothctl.startScan()
+            btnConnect.enabled = false
+            bluetoothctl.startScan()
         }
     }
 
@@ -151,7 +159,7 @@ Page {
         width: _items._width
         height: _btn._height
         background: Rectangle{
-            color: _btn._color
+            color: (enabled) ? _btn._color : _btn._colorDisabled
             anchors.fill: parent
         }
         highlighted: false
@@ -166,9 +174,8 @@ Page {
             font.family: _items._fontFamily
         }
         onClicked: {
-//            bluetoothctl.scanFinished()
-//            bluetoothctl.connectToDevice(devProperties.deviceMac)
-//            btnSendMessage.enabled = true
+            bluetoothctl.scanFinished()
+            bluetoothctl.connectToDevice(devProperties.deviceMac)
         }
     }
 }
