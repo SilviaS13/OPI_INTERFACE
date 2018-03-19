@@ -4,13 +4,13 @@ import QtQuick.Controls 2.2
 Page {
     width: 480
     height: 800
-
     header: Label {
         Text{
             color: _header._color
-            font.pixelSize: Qt.application.font.pixelSize * 2
+            font.pixelSize: _header._fontPixelSize
             padding: 10
-            text: qsTr("Будильники")
+            text: qsTr("Налаштування")
+            font.family: _items._fontFamily
         }
     }
 }

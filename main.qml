@@ -8,44 +8,47 @@ ApplicationWindow {
     width: _window._windowWidth
     height: _window._windowHeight
     title: qsTr("Tabs")
-    background: BorderImage {
-        source: _window._bgImage
-        border { left: 20; top: 20; right: 20; bottom: 20 }
-    }
+    //    background: Image {
+    //        visible: false
+    //        source: _window._bgImage
+    //    }
 
     SwipeView {
         id: swipeView
         anchors.fill: parent
         currentIndex: tabBar.currentIndex
 
-        ConnectForm {
-            id: conection_form
+        Connect {
+            id: conect_form
             background: _window._background
         }
 
-        TimeForm {
+        Time{
             id: time_form
             background: _window._background
         }
 
-        ConfigureForm {
+        Configure{
             id: config_form
             background: _window._background
         }
 
-        MusicForm {
+        Music{
             id: music_form
             background: _window._background
         }
+
     }
+
+
 
     footer: TabBar {
         id: tabBar
         currentIndex: swipeView.currentIndex
 
-        TabButton {
+        TabButton {/*
             x: 0
-            y: 0
+            y: 0*/
             text: qsTr("Пристрої")
             font.weight: Font.Normal
             font.capitalization: Font.Capitalize
@@ -53,8 +56,8 @@ ApplicationWindow {
             focusPolicy: Qt.NoFocus
         }
         TabButton {
-            x: -52
-            y: 0
+            //            x: -52
+            //            y: 0
             text: qsTr("Будильники")
             focusPolicy: Qt.ClickFocus
         }
