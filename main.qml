@@ -124,11 +124,13 @@ ApplicationWindow {
         property int _fontMacPixelSize: Qt.application.font.pixelSize +3
         property int _fontTimePixelSize: Qt.application.font.pixelSize +3
         property int _fontMusicPixelSize: Qt.application.font.pixelSize +3
-        property Rectangle _background: {
-            color: "#3bffd4"
-            width: _items._width
-            height: 300
-        }
+        property string _background: "#3bffd4"
+        property string _colorOfItem: "transparent"
+        property string _colorOfSelectedItem: "black"
+        property string _colorOfName: "black"
+        property string _colorOfSelectedName: "red"
+        property int _highOfItem: 50
+        property int _HeightOfClocksLists: 300
     }
 
     Item{
