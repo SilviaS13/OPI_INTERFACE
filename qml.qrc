@@ -14,5 +14,6 @@
         <file>Configure.qml</file>
         <file>Time.qml</file>
         <file>Music.qml</file>
+        <file>inons/locked.png</file>
     </qresource>
 </RCC>

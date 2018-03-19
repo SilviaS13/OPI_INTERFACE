@@ -6,13 +6,10 @@ Page {
     height: 800
 
     header: Label {
-        Text{
-            color: _header._color
-            //color: titleColor
-            font.pixelSize: Qt.application.font.pixelSize * 2
-            padding: 10
-            text: qsTr("Вибір музики")
-
-        }
+        color: _header._color
+        font.pixelSize: Qt.application.font.pixelSize * 2
+        padding: 10
+        text: qsTr("Вибір музики")
+        font.family: _items._fontFamily
     }
 }

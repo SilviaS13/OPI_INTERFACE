@@ -8,10 +8,9 @@ ApplicationWindow {
     width: _window._windowWidth
     height: _window._windowHeight
     title: qsTr("Tabs")
-    //    background: Image {
-    //        visible: false
-    //        source: _window._bgImage
-    //    }
+        background: Image {
+            source: _window._bgImage
+        }
 
     SwipeView {
         id: swipeView
@@ -20,22 +19,30 @@ ApplicationWindow {
 
         Connect {
             id: conect_form
-            background: _window._background
+            background: Rectangle{
+                color: _window._background
+            }
         }
 
         Time{
             id: time_form
-            background: _window._background
+            background: Rectangle{
+                color: _window._background
+            }
         }
 
         Configure{
             id: config_form
-            background: _window._background
+            background: Rectangle{
+                color: _window._background
+            }
         }
 
         Music{
             id: music_form
-            background: _window._background
+            background: Rectangle{
+                color: _window._background
+            }
         }
 
     }
@@ -52,6 +59,7 @@ ApplicationWindow {
             text: qsTr("Пристрої")
             font.weight: Font.Normal
             font.capitalization: Font.Capitalize
+            font.family: _items._fontFamily
             spacing: 0
             focusPolicy: Qt.NoFocus
         }
@@ -60,13 +68,16 @@ ApplicationWindow {
             //            y: 0
             text: qsTr("Будильники")
             focusPolicy: Qt.ClickFocus
+            font.family: _items._fontFamily
         }
 
         TabButton {
             text: qsTr("Налаштування")
+            font.family: _items._fontFamily
         }
         TabButton {
             text: qsTr("Музика")
+            font.family: _items._fontFamily
         }
 
     }
@@ -78,10 +89,8 @@ ApplicationWindow {
 
     Item {
         id: _window
-        property Rectangle _background: {
-            //color: "transparent"
-            color: "white"
-        }
+        property string _background: "transparent"
+
         property string _bgImage: "img_lights.jpg"
         property int _windowWidth: 480
         property int _windowHeight: 780
@@ -90,31 +99,30 @@ ApplicationWindow {
     Item{
         id: _items
         property int _x: (_window._windowWidth - _items._width) /2
-        property string _fontFamily: "Century Schoolbook L"
+        //property string _fontFamily: "Century Schoolbook L"
+        property string _fontFamily: "sans-serif-thin"
         property int _width: 400
     }
 
     Item {
         id: _header
-        property string _color: "#00ff00"
-        property int _fontPixelSize: Qt.application.font.pixelSize *2
+        property string _color: "lime"
+        property int _fontPixelSize: Qt.application.font.pixelSize *2 +10
     }
 
     Item {
         id: _title
-        property string _color: "#00ff00"
-        property int _fontPixelSize: Qt.application.font.pixelSize +4
+        property string _color: "lime"
+        property int _fontPixelSize: Qt.application.font.pixelSize +8
     }
 
     Item {
         id: _btn
-        property int _height: 40
-        property Rectangle _background: {
-            color: "#fa0e0e"
-            implicitWidth: parent.width
-            implicitHeight: parent.height
-        }
+        property int _height: 50
+        property string _color: "dimgray"
+        property string _fontColor: "white"
         property int _fontPixelSize: Qt.application.font.pixelSize +3
+
     }
 
     Item{
@@ -128,9 +136,9 @@ ApplicationWindow {
         property string _colorOfItem: "transparent"
         property string _colorOfSelectedItem: "black"
         property string _colorOfName: "black"
-        property string _colorOfSelectedName: "red"
+        property string _colorOfSelectedName: "#3bffd4"
         property int _highOfItem: 50
-        property int _HeightOfClocksLists: 300
+
     }
 
     Item{
@@ -146,6 +154,7 @@ ApplicationWindow {
         property int _size: 40
         property string _imgLinked: "inons/link.png"
         property string _imgPaired: "inons/unlink.png"
+        property string _imgUnknown: "inons/locked.png"
         property string _imgDelete: "inons/error.png"
         property string _imgAdd: "inons/plus.png"
         property string _imgSettings: "inons/settings-5.png"
