@@ -1,0 +1,24 @@
+cat _file_ = read all
+cat clocks | grep "clock1" = read all clock properties
+cat clocks | grep "clock1.time" = read time
+
+sed -i 's/original/new/g' file.txt  { //replace words in the file
+
+    Explanation:
+
+        sed = Stream EDitor
+        -i = in-place (i.e. save back to the original file)
+
+        The command string:
+            s = the substitute command
+            original = a regular expression describing the word to replace (or just the word itself)
+            new = the text to replace it with
+            g = global (i.e. replace all and not just the first occurrence)
+
+        file.txt = the file name
+}
+
+sed -i '/clock3./d' clocks = delete lines in file by pattern
+
+echo "text" >> clocks = append line to file
+

@@ -57,17 +57,15 @@ ApplicationWindow {
             x: 0
             y: 0*/
             text: qsTr("Пристрої")
-            font.weight: Font.Normal
-            font.capitalization: Font.Capitalize
+//            font.weight: Font.Normal
+//            font.capitalization: Font.Capitalize
             font.family: _items._fontFamily
-            spacing: 0
-            focusPolicy: Qt.NoFocus
+            //spacing: 0
+            //focusPolicy: Qt.NoFocus
         }
         TabButton {
-            //            x: -52
-            //            y: 0
             text: qsTr("Будильники")
-            focusPolicy: Qt.ClickFocus
+           // focusPolicy: Qt.ClickFocus
             font.family: _items._fontFamily
         }
 
@@ -113,6 +111,15 @@ ApplicationWindow {
     }
 
     Item{
+        id: _message
+        property string login: "root"
+        property string password: "12345678"
+        property string getClocks: ""
+        property string getLights: ""
+        property string getSettings: ""
+    }
+
+    Item{
         id: _devList
         property string paired : _btnConf._imgPaired;
         property string connected : _btnConf._imgLinked;
@@ -136,7 +143,7 @@ ApplicationWindow {
     Item{
         id: _items
         property int _x: (_window._windowWidth - _items._width) /2
-        property string _fontFamily: "Hack"
+        property string _fontFamily: "Dejavu Sans"
         property int _width: 400
     }
 
@@ -168,12 +175,13 @@ ApplicationWindow {
         property int _fontMacPixelSize: Qt.application.font.pixelSize +3
         property int _fontTimePixelSize: Qt.application.font.pixelSize +3
         property int _fontMusicPixelSize: Qt.application.font.pixelSize +3
-        property string _background: "#3bffd4"
+        property string _background: "#66bababa"
         property string _colorOfItem: "transparent"
         property string _colorOfSelectedItem: "black"
         property string _colorOfName: "black"
-        property string _colorOfSelectedName: "#3bffd4"
+        property string _colorOfSelectedName: "lime"
         property int _highOfItem: 50
+        property int _margin: 10
 
     }
 

@@ -1,0 +1,24 @@
+clock1.time: 00:10
+clock1.mode: rgb
+clock1.color: 255000255
+clock1.music: song1
+clock1.enabled: true
+clock1.musicEnabled: true
+clock1.demonstrate: true
+
+clock2.time: 02:30
+clock2.mode: strip
+clock2.color: 255000255
+clock2.music: song2
+clock2.enabled: true
+clock2.musicEnabled: false
+clock2.demonstrate: false
+
+clock3.time: 14:10
+clock3.mode: rainbow
+clock3.color: 255000255
+clock3.music: song3
+clock3.enabled: false
+clock3.musicEnabled: true
+clock3.demonstrate: false
+clock3.time: 14:10

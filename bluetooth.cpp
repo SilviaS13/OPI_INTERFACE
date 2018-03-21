@@ -96,8 +96,19 @@ void Bluetooth::readSocket()
 //        emit messageReceived(socket->peerName(),
 //                             QString::fromUtf8(line.constData(), line.length()));
     }
-    if (line != "")
+    if (line != ""){
         qDebug() << "RECIEVED: " <<line;
+
+    //ПЛЯШЕМ И ПИХАЕМ ПО КЕЙСАМ:
+//    БУДИЛЬНИКИ
+//    МОДЫ
+//    НАСТРОЙКИ
+//        ЦВЕТ
+//        ПЕСНЯ
+//    МУЗЫКА
+
+
+    }
 }
 
 

@@ -1,0 +1,8 @@
+light1.mode: rgb
+light1.color: 255000255
+light1.enabled: true
+
+light2.mode: rgb
+light2.color: 255000255
+light2.enabled: true
+

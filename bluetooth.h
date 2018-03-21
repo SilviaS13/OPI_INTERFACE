@@ -27,9 +27,6 @@ class Bluetooth : public QObject
 public:
     Bluetooth();
 
-
-
-
 signals:
     void mac_addressChanged();
     void device_nameChanged();
@@ -49,7 +46,6 @@ public slots:
     void setDevice_name(const QString &name);
     void setDevice_found(bool &b);
 
-//private slots:
     Q_INVOKABLE void startScan();
     Q_INVOKABLE void sendMessage(const QString &message);
     void readSocket();
