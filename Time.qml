@@ -20,7 +20,7 @@ Page {
         property string on : _btnConf._imgSwitchOn;
         property string off : _btnConf._imgSwitchOff;
         property variant _switchBtnImage: [on, off, off]
-        property variant  _lightName: ["Mode1", "Mode2", "Mode3"]
+        property variant  _lightName: ["Режим1", "Режим2", "Режим3"]
         property int _curIndex: 0
     }
 
@@ -35,11 +35,15 @@ Page {
     }
 
     ScrollView {
+        //flickableDirection: Flickable.VerticalFlick
+       // Flickable.flickableDirection: Flickable.VerticalFlick
         clip: true
         width: parent.width
         height: parent.height
 
         Column {
+            //Flickable.flickableDirection: Flickable.VerticalFlick
+
             id: column1
             width: _items._width
             height: parent.height
@@ -208,7 +212,7 @@ Page {
                 Text {
                     width: _window._windowWidth * 0.67
                     color: _title._color
-                    text: qsTr("Ввімкнути світло зараз")
+                    text: qsTr("Ввімкнути світло")
                     padding: 10
                     font.pixelSize: _title._fontPixelSize
                     font.family: _items._fontFamily
@@ -337,13 +341,15 @@ Page {
                                         }
                                     }
                                 }
-                           } //end of delegate
+                            } //end of delegate
                         } //end of ListView
                     } //end of ScrollView
                     Component.onCompleted: { lightsListRefresh() }
                 }//end of Rectangle
             }
         }
+
+
     }
 
     function clockListRefresh(){

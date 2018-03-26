@@ -2,6 +2,7 @@ import QtQuick 2.9
 import QtQuick.Controls 2.2
 import Bluetooth_Module 1.0
 
+
 ApplicationWindow {
     visible: true
     width: _window._windowWidth
@@ -143,6 +144,7 @@ ApplicationWindow {
     Item{
         id: _items
         property int _x: (_window._windowWidth - _items._width) /2
+        property int _x_right: (_window._windowWidth - 2* _x)
         property string _fontFamily: "Dejavu Sans"
         property int _width: 400
     }
@@ -186,12 +188,18 @@ ApplicationWindow {
     }
 
     Item{
-        id: _radioButton
+        id: _configTab
+        property string _colorOfTime: "white"
+        property string _colorOfRadio: "black"
+        property int _timePixelSize: 40
+        property int _rbPixelSize: Qt.application.font.pixelSize + 8
+        property bool _bold: true
+        property int _heightOfTime : 50
     }
 
-    Item{
-        id: _checkBox
-    }
+//    Item{
+//        id: _checkBox
+//    }
 
     Item{
         id: _btnConf

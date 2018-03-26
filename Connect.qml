@@ -37,18 +37,30 @@ Page {
             devList.append({"name" : _devList._devName[j], "mac" : _devList._devMac[j]})
         }
     }
+//    GridView {
+//        id: gridView
+//        x: 84
+//        y: 457
+//        width: 312
+//        height: 239
 
-    ScrollView{
+
+    GridView{
         clip: true
         width: parent.width
         height: parent.height
 
+
         Column {
+
             id: column1
             width: _items._width
             height: parent.height
             x: _items._x
             bottomPadding: 100
+            //flickableItem.interactive: false
+
+
 
             Row {
                 anchors.left: parent.left
@@ -82,11 +94,11 @@ Page {
                                 left: parent.left;
                                 right: parent.right;
                             }
-                            height: _list._highOfItem
+                            height: _list._highOfItem + 25
                             Rectangle{
                                 id: rectangle1
                                 anchors.fill: parent
-                                color: (index == _devList._curIndex) ? _list._colorOfSelectedItem : _list._colorOfItem
+                                color: (index === _devList._curIndex) ? _list._colorOfSelectedItem : _list._colorOfItem
                                 Text {
                                     font.family: _items._fontFamily
                                     text: model.mac
@@ -121,7 +133,7 @@ Page {
                                 }
 
                                 Button {
-                                    x: rectangle.x + rectangle.width - 2 * (width + _list._margin)
+                                    x: rectangle.x + rectangle.width - 1 * width - 2* _list._margin
                                     anchors.verticalCenter: parent.verticalCenter
                                     width: _btnConf._size
                                     height: _btnConf._size
@@ -158,7 +170,7 @@ Page {
                     enabled: false
                     visible: true
                     Label{
-                        text: qsTr("Connect")
+                        text: qsTr("З'єднання")
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.verticalCenter: parent.verticalCenter
                         font.pointSize: _btn._fontPixelSize
@@ -184,7 +196,7 @@ Page {
                         anchors.fill: parent
                     }
                     Label{
-                        text: qsTr("Search devices")
+                        text: qsTr("Пошук пристроїв")
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.verticalCenter: parent.verticalCenter
                         font.pointSize: _btn._fontPixelSize
@@ -204,5 +216,6 @@ Page {
             }
 
         }
-    }
+   }
+
 }
