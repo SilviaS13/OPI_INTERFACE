@@ -12,8 +12,11 @@ struct Response
     QByteArray prev_line;
     QByteArray line;
     QStringList clock_prop;
+    QStringList single_clock_prop;
     QStringList light_prop;
+    QStringList single_light_prop;
     QStringList music_list;
+    QStringList splitted_music_list;
     char prop_counter;
     bool recieved = false;
 }response;
@@ -84,7 +87,7 @@ void Bluetooth::connectToDevice(const QString &mac)
 #endif
     connect(socket, SIGNAL(readyRead()), this, SLOT(readSocket()));
     connect(socket, SIGNAL(connected()), this, SLOT(connected()));
-    connect(socket, SIGNAL(disconnected()), this, SLOT(disconnected()));   
+    connect(socket, SIGNAL(disconnected()), this, SLOT(disconnected()));
 }
 
 void Bluetooth::sendMessage(const QString &message)
@@ -101,20 +104,11 @@ void Bluetooth::login()
     request.queryType = LOGIN;
 //    if (request.ping_start){
 //        request.ping_start = false;
-////        signal(SIGALRM, &alarm_handler);  // set a signal handler
-////        alarm(1);
-////        request.ping_start = false;
-////        for (int i = 0; i< 15; i++){
-////            socket->write(request.login.toUtf8()+ '\n');
-////            usleep(100000);
-////            //readSocket();
-////            //if (response.line != "empty") break;
-////        }
 //    }
 #ifdef DEBUG
     qDebug() << "\n HELLO FROM LOGIN!\n";
 #endif
-    socket->write(request.login.toUtf8()+ '\n');
+    sendMessage(request.login);
 }
 
 void Bluetooth::getProperties(int type)
@@ -137,11 +131,11 @@ void Bluetooth::getProperties(int type)
 
 QString Bluetooth::getClockProperty(char index)
 {
-    return response.clock_prop[index];
+    return response.single_clock_prop[index];
 }
 QString Bluetooth::getLightProperty(char index)
 {
-    return response.light_prop[index];
+    return response.single_light_prop[index];
 }
 QStringList Bluetooth::getMusicProperty()
 {
@@ -201,32 +195,48 @@ void Bluetooth::scanFinished(){
 #endif
 }
 
-//extern void alarm_handler(int sig){
-//    signal(SIGALRM, SIG_IGN);
-//    qDebug() << "ALARM HANDLER " << request.ping_count;
-//    if (request.ping_count++ < 11){
-//        signal(SIGALRM, alarm_handler);
-//        Bluetooth::login();
-//        alarm(1);
-//    }
-//    else {
-//        alarm(0); //off
-//    }
-//}
+void Bluetooth::split_clocks(){
+
+    foreach (QString str, response.clock_prop) {
+        response.single_clock_prop = str.split(",", QString::SkipEmptyParts);
+#ifdef DEBUG
+        qDebug() << "Clocks length = " << response.single_clock_prop.length();
+#endif
+        if (response.single_clock_prop.length() == 10){
+            emit nextClock_found();
+        }
+    }
+}
+
+void Bluetooth::split_lights(){
+    foreach (QString str, response.light_prop) {
+        response.single_light_prop = str.split(",", QString::SkipEmptyParts);
+    #ifdef DEBUG
+            qDebug() << "Lights length = " << response.single_light_prop.length();
+    #endif
+        if (response.single_light_prop.length() == 7){
+            emit nextLight_found();
+        }
+    }
+}
+
 
 void Bluetooth::readSocket()
 {
-    QBluetoothSocket *socket = qobject_cast<QBluetoothSocket *>(sender());
-    if (!socket)
+    QBluetoothSocket *read_socket = qobject_cast<QBluetoothSocket *>(sender());
+    if (!read_socket)
         return;
     response.line = "-";
-    while (socket->canReadLine()) {
-        response.line = socket->readLine().trimmed();
-    }
+
+    ///READ ALL AVALIABLE STRINGS IN BLUETOOTH BUFFER
+    while (read_socket->canReadLine()) {
+        response.line = read_socket->readLine().trimmed();
+
+        if (response.line == "-")  return;
+
 #ifdef DEBUG
-    //qDebug() << response.line;
+        qDebug() << response.line;
 #endif
-    if (response.line != "-"){
 
         switch (request.queryType) {
             case LOGIN:{
@@ -234,101 +244,84 @@ void Bluetooth::readSocket()
                 if (response.line == "root@orangepizero:~# root"
                         || response.line == "root: command not found"){
 #ifdef DEBUG
-                    qDebug() << "\n ALREADY LOGGED IN\n";
+                        qDebug() << "\n ALREADY LOGGED IN\n";
 #endif
-                    request.queryType = EMPTY;
-                    emit device_connected();
-                }
-                ///send password case
-                else if (response.line == ("orangepizero login: "+ request.login) ||
-                         response.line == request.login)
-                {
-                    socket->write(request.pass.toUtf8() + '\n');
+                        request.queryType = EMPTY;
+                        emit device_connected();
+                    }
+                    ///send password case
+                    else if (response.line == ("orangepizero login: "+ request.login) ||
+                             response.line == request.login)
+                    {
+                        sendMessage(request.pass);
 #ifdef DEBUG
-                    qDebug() << "\n send password case\n";
+                        qDebug() << "\n send password case\n";
 #endif
-                    //request.queryType = EMPTY;
-                    //request.ping_start = true;
-                }
-                ///send login case
-                else if (response.line == "Login incorrect" ||
-                         response.line =="Password:" ||
-                         response.line =="Password:" + request.login)
-                {
-                    login();
-                    //socket->write(request.login.toUtf8() + '\n');
+                    }
+                    ///send login case
+                    else if (response.line == "Login incorrect" ||
+                             response.line =="Password:" ||
+                             response.line =="Password:" + request.login ||
+                             response.line =="orangepizero login:"||
+                             response.line =="Debian GNU/Linux 9 orangepizero ttyS0")
+                    {
+                        login();
 #ifdef DEBUG
-                    qDebug() << "send login case";
+                        qDebug() << "send login case";
 #endif
-                }
-                else{
-                    //login();
-                    //usleep(1000000);
+                    }
+                    else{
+                        //login();
 #ifdef DEBUG
-                    qDebug() << "else CASE";
+                        qDebug() << "else CASE";
 #endif
+                    }
+                    break;
                 }
-
-                break;
-            }
-            case ALL_CLOCKS:{
+            case ALL_CLOCKS: {
 #ifdef DEBUG
                 qDebug() << "ALL_CLOCKS CASE: " << response.line;
 #endif
-                QString str = response.line;
-                if (str == "end"){
+                response.clock_prop.append(response.line);
+                if (response.clock_prop.last() == "end"){
 #ifdef DEBUG
                     qDebug() << "\n EOF \n";
 #endif
                     request.queryType = EMPTY;
                     emit eofClocks();
                 }
-                response.clock_prop = str.split(",", QString::SkipEmptyParts);
-#ifdef DEBUG
-                qDebug() << "Clocks length = " << response.clock_prop.length();
-#endif
-                if (response.clock_prop.length() == 10){
-                    emit nextClock_found();
-                }
                 break;
             }
-            case ALL_LIGHTS:{
-#ifdef DEBUG
-                qDebug() << "ALL_LIGHTS CASE";
-#endif
-                QString str = response.line;
-                if (str == "end"){
-#ifdef DEBUG
-                    qDebug() << "\n EOF \n";
-#endif
-                    emit eofLights();
-                    request.queryType = EMPTY;
-                }
-                response.light_prop = str.split(",", QString::SkipEmptyParts);
-#ifdef DEBUG
-                    qDebug() << "Lights length = " << response.light_prop.length();
-#endif
-                if (response.light_prop.length() == 7){
-                    emit nextLight_found();
-                }
+            case ALL_LIGHTS: {
+    #ifdef DEBUG
+                    qDebug() << "ALL_LIGHTS CASE";
+    #endif
+                    response.light_prop.append(response.line);
+                    if (response.light_prop.last() == "end"){
+    #ifdef DEBUG
+                        qDebug() << "\n EOF \n";
+    #endif
+                        emit eofLights();
+                        request.queryType = EMPTY;
+                    }
                 break;
             }
-            case ALL_MUSIC:{
+            case ALL_MUSIC: {
 #ifdef DEBUG
-                qDebug() << "ALL_MUSIC CASE";
+                        qDebug() << "ALL_MUSIC CASE";
 #endif
-                QString str = response.line;
-                response.music_list = str.split(",", QString::SkipEmptyParts);
-                break;
-            }
-            default:{
+                        QString str = response.line;
+                        response.music_list = str.split(",", QString::SkipEmptyParts);
+                        break;
+                    }
+            default: {
 #ifdef DEBUG
                 qDebug() << "EMPTY CASE in response read";
 #endif
-                break;
+            break;
             }
         }
-    }
+    }///END OF READ ALL AVALIABLE STRINGS
 }
 
 void Bluetooth::connected(){

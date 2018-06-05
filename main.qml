@@ -42,31 +42,33 @@ ApplicationWindow {
                 bluetoothctl.getProperties(_message.all_clocks);
             }
 
+            /////////// NEW ITEM FOUND FUNCTIONS
             onNextClock_found: {
-                console.log("new Clock!!")
                 addClock(getClockProperty(_enumC.hrs), getClockProperty(_enumC.mins),
                          getClockProperty(_enumC.mode), getClockProperty(_enumC.r),
                          getClockProperty(_enumC.g), getClockProperty(_enumC.b),
                          getClockProperty(_enumC.music), getClockProperty(_enumC.mus_e),
-                         getClockProperty(_enumC.Enabled) === "t" ? _clockList.on : _clockList.off,
-                         getClockProperty(_enumC.demo))
-
-                time_form.clockListRefresh();
+                         getClockProperty(_enumC.enabled), getClockProperty(_enumC.demo));
             }
-            onEofClocks: {
-                clearList(_message.all_lights)
-                bluetoothctl.getProperties(_message.all_lights);
-            }
-            onEofLights: {
-                console.log("eof lights");
-            }
-
             onNextLight_found: {
                 addLight(getLightProperty(_enumL.name), getLightProperty(_enumL.mode),
                          getLightProperty(_enumL.r), getLightProperty(_enumL.g), getLightProperty(_enumL.b),
                          getLightProperty(_enumL.enabled), getLightProperty(_enumL.demo))
                 time_form.lightsListRefresh();
-                //console.log("new Light!!")
+            }
+
+            //////////////// EOF FUNCTIONS
+            onEofClocks: {
+                clearList(_message.all_clocks)
+                bluetoothctl.split_clocks()
+                time_form.clockListRefresh();
+                bluetoothctl.getProperties(_message.all_lights);
+            }
+            onEofLights: {
+                console.log("eof lights");
+                clearList(_message.all_lights);
+                bluetoothctl.split_lights();
+                time_form.lightsListRefresh();
             }
         }
 
@@ -95,9 +97,9 @@ ApplicationWindow {
         }
 
         function addClock(Hrs, Mins, Mode, R,G,B, Music,Mus_e,Enabled, Demo){
+            _clockList._switchBtnImage.push(Enabled === "t" ? _clockList.on : _clockList.off);
             _clockList._hrs.push(Hrs);
             _clockList._mins.push(Mins);
-            _clockList._switchBtnImage.push(Enabled === "t" ? _clockList.on : _clockList.off);
             _clockList._mode.push(Mode);
             _clockList._r.push(R);
             _clockList._g.push(G);
@@ -107,8 +109,8 @@ ApplicationWindow {
             _clockList._demo.push(Demo);
         }
         function addLight(Name, Mode, R,G,B,Enabled,Demo){
-            _lightsList._name.push(Name);
             _lightsList._switchBtnImage.push( Enabled === "t" ? _lightsList.on : _lightsList.off);
+            _lightsList._name.push(Name);
             _lightsList._mode.push(Mode);
             _lightsList._r.push(R);
             _lightsList._g.push(G);

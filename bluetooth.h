@@ -93,17 +93,14 @@ public:
     Q_INVOKABLE QString intToHex(QString value);
 //    Q_INVOKABLE void buildClockConfigString();
 //    Q_INVOKABLE void buildLightConfigString();
-
-
-
-
-
+    Q_INVOKABLE void split_clocks();
+    Q_INVOKABLE void split_lights();
 
 private:
     QBluetoothDeviceDiscoveryAgent *discoveryAgent;
     QBluetoothServiceDiscoveryAgent* serviceDiscoveryAgent;
     QBluetoothLocalDevice *localDevice = new QBluetoothLocalDevice;
-    QBluetoothSocket *socket;    
+    QBluetoothSocket *socket;
 
     QString _mac_address;
     QString _device_name;
