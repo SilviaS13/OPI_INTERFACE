@@ -5,11 +5,25 @@ import Bluetooth_Module 1.0
 Page {
     width: 480
     height: 800
+    /////////////////////////////
+    function onMusicDemoClicked(){
+        //bluetoothctl.sendMessage("")
+    }
+    function onMusicSaveClicked(){
+        _configs._clock[_enumC.music] = _musicList._songs[_musicList._curIndex];
 
-    Item{
-        id: _musicList
-        property variant  _songList: ["Пташки у лісі", "Журчання води", "Вітер в полі", "Шум дощу", "Мелодія світанку", "Затишна домівка"]
-        property int _curIndex: 0
+        config_form.fillConfigMusic();
+        tabBar.currentIndex = 2;
+    }
+
+    function musicListRefresh(){
+        for (var i=musicList.count -1; i>=0; i--) {
+            musicList.remove(i);
+        }
+
+        for (var j=0; j < _musicList._songs.length; j++) {
+            musicList.append({"name" : _musicList._songs[j]})
+        }
     }
 
     header: Label {
@@ -34,7 +48,7 @@ Page {
             Row {
                 anchors.left: parent.left
                 anchors.right: parent.right
-                height: rectangle.height +topPadding
+                height: rectangle.height + topPadding
                 topPadding: 10
 
                 Rectangle {
@@ -118,6 +132,7 @@ Page {
                     focusPolicy: Qt.NoFocus
                     onClicked: {
                         //todo
+                        onMusicDemoClicked();
                     }
                 }
             }
@@ -148,20 +163,10 @@ Page {
                     focusPolicy: Qt.NoFocus
                     onClicked: {
                         //todo
+                        onMusicSaveClicked();
                     }
                 }
             }
-
         }
-
-    }
-    function musicListRefresh(){
-        for (var i=musicList.count -1; i>=0; i--) {
-            musicList.remove(i);
-        }
-
-        for (var j=0; j < _musicList._songList.length; j++) {
-            musicList.append({"name" : _musicList._songList[j]})
-        }
-    }
+    }    
 }

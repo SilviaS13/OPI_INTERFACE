@@ -6,16 +6,37 @@ Page {
     width: 480
     height: 800
 
-//    Bluetooth{
-//        onDevice_foundChanged: {
-//           _devList._devMac.push(bluetoothctl.getMac_address())
-//           _devList._devName.push(bluetoothctl.getDevice_name())
-//            _devList._devStateImage(_devList.unknown)
-//            devListRefresh()
-//            console.log("FOUND")
-//        }
-//    }
+    ////////////// FUNCTIONS ////////////////////////////
+    function login(){
+        console.log("QML LOGIN FCN \n")
+        //bluetoothctl.login(_message.login, _message.password);
+    }
 
+    function getAllClocks(){
+        console.log("QML GETALLCLOCKS FCN \n")
+       // bluetoothctl.sendMessage(_message.getClocks)
+    }
+
+    function getAllLights(){
+        console.log("QML GET ALL LIGHTS FCN \n")
+        //bluetoothctl.sendMessage(_message.getLights)
+    }
+    function onConnectClicked(){
+        bluetoothctl.scanFinished()
+        bluetoothctl.connectToDevice(devProperties.connectMac)
+    }
+
+    function onSearchDevClicked(){
+        _devList._curIndex = 0;
+        //for (var i = 0; i < _devList._devName.length; i++){
+           _devList._devName.splice(0, _devList._devName.length)
+        _devList._devMac.splice(0, _devList._devMac.length)
+        _devList._devStateImage.splice(0, _devList._devStateImage.length)
+        //}
+        devListRefresh()
+        btnConnect.enabled = false
+        bluetoothctl.startScan()
+    }
 
     header: Label {
             color: _header._color
@@ -23,7 +44,6 @@ Page {
             padding: 10
             text: qsTr("Пристрої")
             font.family: _items._fontFamily
-
     }
 
 
@@ -58,9 +78,6 @@ Page {
             height: parent.height
             x: _items._x
             bottomPadding: 100
-            //flickableItem.interactive: false
-
-
 
             Row {
                 anchors.left: parent.left
@@ -105,7 +122,7 @@ Page {
                                     anchors.left: parent.left
                                     anchors.leftMargin: 10
                                     anchors.verticalCenter: parent.verticalCenter
-                                    color: (index == _devList._curIndex) ? _list._colorOfSelectedName : _list._colorOfName
+                                    color: (index === _devList._curIndex) ? _list._colorOfSelectedName : _list._colorOfName
                                     font.bold: true
                                     font.pointSize: _list._fontNamePixelSize
 
@@ -126,7 +143,7 @@ Page {
                                     anchors.fill: parent
                                     onClicked:{
                                         _devList._curIndex = index
-                                        devProperties.deviceMac = _devList._devMac[index]
+                                        devProperties.connectMac = _devList._devMac[index]
                                         btnConnect.enabled = true
                                         devListRefresh()
                                     }
@@ -143,7 +160,7 @@ Page {
                                         fillMode: Image.PreserveAspectFit
                                         sourceSize.height: 0
                                         sourceSize.width: 0
-                                        source: _devList._devStateImage[index]
+                                        source: encodeURIComponent(_devList._devStateImage[index])
                                     }
                                 }
                             }
@@ -177,9 +194,9 @@ Page {
                         color: _btn._fontColor
                         font.family: _items._fontFamily
                     }
+                    ///////////////////// : CONNECT TO DEVICE AND GET ITS SCHEDULE
                     onClicked: {
-                        bluetoothctl.scanFinished()
-                        bluetoothctl.connectToDevice(devProperties.deviceMac)
+                        onConnectClicked();
                     }
                 }
             }
@@ -209,8 +226,7 @@ Page {
                     topPadding: 6
                     focusPolicy: Qt.NoFocus
                     onClicked: {
-                        btnConnect.enabled = false
-                        bluetoothctl.startScan()
+                        onSearchDevClicked()
                     }
                 }
             }

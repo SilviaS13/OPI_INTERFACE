@@ -4,6 +4,187 @@ import Bluetooth_Module 1.0
 import QtQuick.Dialogs 1.0
 
 Page {
+    property string propertyString: ""
+
+    function getColor(color, part){
+        return bluetoothctl.hexToInt(qsTr(color), part);
+    }
+    ////// SAVE CONFIGS TO LIST OF CLOCKS/LIGHTS
+    function onSaveConfigClicked(){
+        var i=0;
+        if (_configs.mode === "c"){
+            _clockList._hrs[_configs.index] = _configs._clock[_enumC.hrs]
+            _clockList._mins[_configs.index] = _configs._clock[_enumC.mins]
+            _clockList._mode[_configs.index] = _configs._clock[_enumC.mode]
+            _clockList._r[_configs.index] = _configs._clock[_enumC.r]
+            _clockList._g[_configs.index] = _configs._clock[_enumC.g]
+            _clockList._b[_configs.index] = _configs._clock[_enumC.b]
+            _clockList._music[_configs.index] = _configs._clock[_enumC.music]
+            _clockList._music_e[_configs.index] = _configs._clock[_enumC.mus_e]
+            _clockList._demo[_configs.index] = _configs._clock[_enumC.demo]
+            time_form.clockListRefresh()
+            //bluetoothctl.sendMessage(_message.clearClocksFile)
+
+            for (i=0; i < _clockList._hrs.length; i++){
+                propertyString = _clockList._hrs[i] + ","+_clockList._mins[i]+","+
+                       _clockList._mode[i]+","+_clockList._r[i]+","+_clockList._g[i]+
+                        _clockList._b[i]+","+_clockList._music[i]+","+_clockList._music_e[i]+
+                        ","+_clockList._demo[i]+ _clockList.enabled[i];
+            }
+        }
+        else{
+            _lightsList._name[_configs.index] = _configs._light[_enumL.name]
+            _lightsList._mode[_configs.index] = _configs._light[_enumL.mode]
+            _lightsList._r[_configs.index] = _configs._light[_enumL.r]
+            _lightsList._g[_configs.index] = _configs._light[_enumL.g]
+            _lightsList._b[_configs.index] = _configs._light[_enumL.b]
+            _lightsList._demo[_configs.index] = _configs._light[_enumL.demo]
+            time_form.lightsListRefresh()
+            //bluetoothctl.sendMessage(_message.clearLightsFile)
+            for (i=0; i < _clockList._hrs.length; i++){
+                propertyString = _lightsList._name[i] + ","+
+                       _lightsList._mode[i]+","+_lightsList._r[i]+","+_lightsList._g[i]+
+                       _lightsList._b[i]+","+_lightsList._demo[i]+ _lightsList.enabled[i];
+            }
+
+        }
+        //bluetoothctl.sendMessage("");
+        tabBar.currentIndex = 1;
+    }
+
+    function fillConfigMusic(){
+        chMusic.text = _configs._clock[_enumC.music]
+    }
+    function fillConfigFields(){
+        //console.log("in fcn set configs")
+        if (_configs.mode === "c"){
+            lblTime.text = "Час"
+            txtMinutes.visible = true;
+            txtDot.visible = true;
+            musicRow.visible = true;
+            txtHours.text = _configs._clock[_enumC.hrs]
+            txtMinutes.text = _configs._clock[_enumC.mins]
+            rb0.checked = (_configs._clock[_enumC.mode] === mode[0]) ? true : false
+            rb1.checked = (_configs._clock[_enumC.mode] === mode[1]) ? true : false
+            rb2.checked = (_configs._clock[_enumC.mode] === mode[2]) ? true : false
+            rb3.checked = (_configs._clock[_enumC.mode] === mode[3]) ? true : false
+            rb4.checked = (_configs._clock[_enumC.mode] === mode[4]) ? true : false
+            chMusic.checked = (_configs._clock[_enumC.mus_e] === "t") ? true : false
+
+            bgColor.color = "#"+bluetoothctl.intToHex(_configs._clock[_enumC.r])+
+                            bluetoothctl.intToHex(_configs._clock[_enumC.g])+
+                            bluetoothctl.intToHex(_configs._clock[_enumC.b]);
+            fillConfigMusic();
+        }
+        else{
+            lblTime.text = "Назва"
+            txtMinutes.visible = false;
+            txtDot.visible = false;
+            musicRow.visible = false;
+            txtHours.text = _configs._light[_enumL.name]
+            rb0.checked = (_configs._light[_enumL.mode] === mode[0]) ? true : false
+            rb1.checked = (_configs._light[_enumL.mode] === mode[1]) ? true : false
+            rb2.checked = (_configs._light[_enumL.mode] === mode[2]) ? true : false
+            rb3.checked = (_configs._light[_enumL.mode] === mode[3]) ? true : false
+            rb4.checked = (_configs._light[_enumL.mode] === mode[4]) ? true : false
+
+            bgColor.color = "#"+bluetoothctl.intToHex(_configs._light[_enumL.r])+
+                    bluetoothctl.intToHex(_configs._light[_enumL.g])+
+                    bluetoothctl.intToHex(_configs._light[_enumL.b]);
+        }
+    }
+
+    ColorDialog {
+        id: colorDialog
+        title: "Please, choose a color..."
+        onAccepted: {
+            bgColor.color = colorDialog.color
+            changeConfiguration(getColor(""+bgColor.color, 1), "r");
+            changeConfiguration(getColor(""+bgColor.color, 3), "g");
+            changeConfiguration(getColor(""+bgColor.color, 5), "b");
+            close()
+        }
+        onRejected: {
+            console.log("Canceled")
+            close()
+        }
+        Component.onCompleted: visible = false
+    }
+
+    ////// SET FIELDS TO _CONFIGS
+    function changeConfiguration(conf, whatconfig){
+        if (_configs.mode === 'c'){
+            switch (whatconfig){
+            case ("hrs"):
+                _configs._clock[_enumC.hrs] = conf;
+                break;
+            case ("mins"):
+                _configs._clock[_enumC.mins] = conf;
+                break;
+            case ("mode"):
+                _configs._clock[_enumC.mode] = conf;
+                break;
+            case ("r"):
+                _configs._clock[_enumC.r] = conf;
+                break;
+            case ("g"):
+                _configs._clock[_enumC.g] = conf;
+                break;
+            case ("b"):
+                _configs._clock[_enumC.b] = conf;
+                break;
+            case ("music"):
+                _configs._clock[_enumC.music] = conf;
+                break;
+            case ("mus_e"):
+                _configs._clock[_enumC.mus_e] = conf;
+                break;
+            case ("demo"):
+                _configs._clock[_enumC.demo] = conf;
+                break;
+            }
+        }
+        else{
+            switch (whatconfig){
+            case ("hrs"):
+                _configs._light[_enumL.name] = conf;
+                break;
+            case ("mode"):
+                _configs._light[_enumL.mode] = conf;
+                break;
+            case ("r"):
+                _configs._light[_enumL.r] = conf;
+                break;
+            case ("g"):
+                _configs._light[_enumL.g] = conf;
+                break;
+            case ("b"):
+                _configs._light[_enumL.b] = conf;
+                break;
+            case ("demo"):
+                _configs._light[_enumL.demo] = conf;
+                break;
+            }
+        }
+    }
+
+    //////// CLEAR ALL RADIOBUTTONS//////////
+    function rbClear(){
+        rb0.checked = false
+        rb1.checked = false
+        rb2.checked = false
+        rb3.checked = false
+        rb4.checked = false
+    }
+
+    function onMusicConfClicked(){
+        music_form.musicListRefresh()
+        tabBar.currentIndex = 3
+    }
+
+    ///////////////////////////////////////////
+    //============ UI ELEMENTS ==============//
+    ///////////////////////////////////////////
     width: 480
     height: 800
     background: Rectangle{
@@ -18,7 +199,6 @@ Page {
         text: qsTr("Налаштування")
         font.family: _items._fontFamily
     }
-
 
     ScrollView {
 
@@ -38,6 +218,7 @@ Page {
                 height: _btnConf._size
                 width: _items._width
                 Text {
+                    id: lblTime
                     padding: 10
                     color: _title._color
                     text: qsTr("Час")
@@ -47,7 +228,6 @@ Page {
                     font.family: _items._fontFamily
                 }
             }
-
             Row {
                 id: row
                 anchors.left: parent.left
@@ -65,11 +245,11 @@ Page {
                     TextEdit {
                         id: txtHours
                         color: _configTab._colorOfTime
-                        text: qsTr("05")
-
-
+                        text: qsTr("07")
                         font.pixelSize: _configTab._timePixelSize
-
+                        onTextChanged: {
+                            changeConfiguration(txtHours.text, "hrs")
+                        }
                     }
                 }
                 Rectangle{
@@ -102,7 +282,9 @@ Page {
                         text: qsTr("45")
 
                         font.pixelSize: _configTab._timePixelSize
-
+                        onTextChanged: {
+                           changeConfiguration(txtMinutes.text, "mins")
+                        }
                     }
                 }
 
@@ -134,13 +316,15 @@ Page {
                 }
 
                 RadioButton {
-                    id: rbSunrise
+                    id: rb0
                     height: 40
-                    text: qsTr("Світанок")
+                    text: qsTr(mode[0])
                     font.pixelSize: _configTab._rbPixelSize
                     font.family: _items._fontFamily
                     onClicked: {
-                        rbClear("rbSunrise")
+                        rbClear();
+                        changeConfiguration(mode[0], "mode")
+                        rb0.checked= true
                     }
                 }
             }
@@ -154,13 +338,15 @@ Page {
                     color: _list._background
                 }
                 RadioButton {
-                    id: rbRainbow
+                    id: rb1
                     height: 40
-                    text: qsTr("Веселка")
+                    text: qsTr(mode[1])
                     font.pixelSize: _configTab._rbPixelSize
                     font.family: _items._fontFamily
                     onClicked: {
-                        rbClear("rbRainbow")
+                        rbClear()
+                        changeConfiguration(mode[1], "mode")
+                        rb1.checked = true
                     }
                 }
             }
@@ -175,13 +361,15 @@ Page {
                 }
 
                 RadioButton {
-                    id: rbRainbowCycle
+                    id: rb2
                     height: 40
-                    text: qsTr("Веселка по колу")
+                    text: qsTr(mode[2])
                     font.pixelSize: _configTab._rbPixelSize
                     font.family: _items._fontFamily
                     onClicked: {
-                        rbClear("rbRainbowCycle")
+                        rbClear()
+                        changeConfiguration(mode[2], "mode")
+                        rb2.checked= true
                     }
                 }
             }
@@ -194,13 +382,15 @@ Page {
                     color: _list._background
                 }
                 RadioButton {
-                    id: rbWheel
+                    id: rb3
                     height: parent.height
-                    text: qsTr("Колесо")
+                    text: qsTr(mode[3])
                     font.pixelSize: _configTab._rbPixelSize
                     font.family: _items._fontFamily
-                    onClicked: {
-                        rbClear("rbWheel")
+                    onClicked: {                        
+                        rbClear()
+                        changeConfiguration(mode[3], "mode")
+                        rb3.checked= true
                     }
                 }
             }
@@ -214,15 +404,17 @@ Page {
                     color: _list._background
                 }
                 RadioButton {
-                    id: rbColor
+                    id: rb4
                     height: parent.height
                     width: _items._width *0.5
-                    text: qsTr("Колір")
+                    text: qsTr(mode[4])
                     font.pixelSize: _configTab._rbPixelSize
                     font.family: _items._fontFamily
 
                     onClicked: {
-                        rbClear("rbColor")
+                        rbClear()
+                        changeConfiguration(mode[4], "mode")
+                        rb4.checked = true
                     }
                 }
                 Button{
@@ -274,6 +466,7 @@ Page {
                 }
             }
             Row {
+                id: musicRow
                 anchors.left: parent.left
                 anchors.right: parent.right
                 height: _btnConf._size
@@ -290,6 +483,7 @@ Page {
                     font.family: _items._fontFamily
                     onClicked: {
                         //todo
+                        changeConfiguration(chMusic.enabled, "mus_e")
                     }
                 }
                 Button{
@@ -307,7 +501,7 @@ Page {
                         source: _btnConf._imgSettings
                     }
                     onClicked: {
-
+                        onMusicConfClicked();
                     }
                 }
             }
@@ -338,40 +532,11 @@ Page {
                     topPadding: 6
                     focusPolicy: Qt.NoFocus
                     onClicked: {
-                        //todo
+                        onSaveConfigClicked();
                     }
                 }
             }
 
         }
-    }
-    function rbClear(rb){
-        if (rb !== "rbRainbow")
-            rbRainbow.checked = false
-        if (rb !== "rbRainbowCycle")
-            rbRainbowCycle.checked = false
-        if (rb !== "rbSunrise")
-            rbSunrise.checked = false
-        if (rb !== "rbWheel")
-            rbWheel.checked = false
-        if (rb !== "rbColor")
-            rbColor.checked = false
-    }
-
-    ColorDialog {
-        id: colorDialog
-        title: "Please choose a color"
-        onAccepted: {
-            console.log("You chose: " + colorDialog.color)
-            bgColor.color = colorDialog.color
-            //Qt.quit()
-            close()
-        }
-        onRejected: {
-            console.log("Canceled")
-            //Qt.quit()
-            close()
-        }
-        Component.onCompleted: visible = false
     }
 }

@@ -1,0 +1,1 @@
+/usr/bin/c++  -g   CMakeFiles/OPI_INTERFACE.dir/bluetooth.cpp.o CMakeFiles/OPI_INTERFACE.dir/clocks.cpp.o CMakeFiles/OPI_INTERFACE.dir/main.cpp.o  -o OPI_INTERFACE 

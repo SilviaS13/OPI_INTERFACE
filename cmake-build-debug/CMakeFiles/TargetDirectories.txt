@@ -1,0 +1,3 @@
+/home/silvia/QtProjects/OPI_INTERFACE/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/silvia/QtProjects/OPI_INTERFACE/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/silvia/QtProjects/OPI_INTERFACE/cmake-build-debug/CMakeFiles/OPI_INTERFACE.dir

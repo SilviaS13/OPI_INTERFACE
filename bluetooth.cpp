@@ -1,12 +1,47 @@
 #include "bluetooth.h"
+//#include < signal.h >
 
+#define DEBUG  1
+
+enum settings{EMPTY = -1, LOGIN, ALL_CLOCKS, ALL_LIGHTS, ALL_MUSIC};
+
+//extern void alarm_handler(int);
+
+struct Response
+{
+    QByteArray prev_line;
+    QByteArray line;
+    QStringList clock_prop;
+    QStringList light_prop;
+    QStringList music_list;
+    char prop_counter;
+    bool recieved = false;
+}response;
+
+struct Request
+{
+    QString clocksPath = "/root/conf/clocks";     /*"/tmp/conf/clocks"*/
+    QString lightsPath = "/root/conf/lights";     /*"/tmp/conf/lights"*/
+    QString musicPath = "/root/conf/music";     /*"/tmp/conf/music"*/
+    QString clearClocksFile = "> " + clocksPath;
+    QString clearLightsFile =  "> " + lightsPath;
+    QString getClocks = "cat "+ clocksPath;
+    QString getLights = "cat " + lightsPath;
+    QString getMusic = "cat " + musicPath;
+    QString login = "root";
+    QString pass = "12345678";
+    char queryType = EMPTY;
+    bool ping_start = true;
+    volatile unsigned int ping_count = 0;
+}request;
 
 //////////////////////////////////////////////////////
 //===================== INIT =======================//
 //////////////////////////////////////////////////////
 
-Bluetooth::Bluetooth() : localDevice(new QBluetoothLocalDevice), discoveryAgent(new QBluetoothDeviceDiscoveryAgent),
-    _device_found(false), socket(new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol))
+Bluetooth::Bluetooth() : localDevice(new QBluetoothLocalDevice),
+                        discoveryAgent(new QBluetoothDeviceDiscoveryAgent),/*_device_found(false),*/
+                        socket(new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol))
 {
     connect(discoveryAgent, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)),
             this, SLOT(addDevice(QBluetoothDeviceInfo)));
@@ -16,8 +51,10 @@ Bluetooth::Bluetooth() : localDevice(new QBluetoothLocalDevice), discoveryAgent(
             this, SLOT(hostModeStateChanged(QBluetoothLocalDevice::HostMode)));
     hostModeStateChanged(localDevice->hostMode());
 
-    connect(localDevice, SIGNAL(pairingFinished(QBluetoothAddress,QBluetoothLocalDevice::Pairing))
-        , this, SLOT(pairingDone(QBluetoothAddress,QBluetoothLocalDevice::Pairing)));
+    connect(localDevice, SIGNAL(pairingFinished(QBluetoothAddress,QBluetoothLocalDevice::Pairing)),
+            this, SLOT(pairingDone(QBluetoothAddress,QBluetoothLocalDevice::Pairing)));
+    response.prev_line = "";
+    response.prop_counter = 0;
 }
 
 
@@ -38,26 +75,105 @@ void Bluetooth::connectToDevice(const QString &mac)
     //do magic with rfcomm
     static const QString serviceUuid(QStringLiteral("00001101-0000-1000-8000-00805F9B34FB"));
     socket->connectToService(QBluetoothAddress(mac), QBluetoothUuid(serviceUuid), QIODevice::ReadWrite);
-
-    //trying to get bluetooth state
+#ifdef DEBUG
+    qDebug() << "\n\n trying to get bluetooth state\n";
+#endif
     if (socket->state() == QBluetoothSocket::ConnectedState)
-        qDebug() << "CONNECTED TO " << mac;
-
-    socket->write("h");
-
+#ifdef DEBUG
+        qDebug()<< "CONNECTED TO " << mac;
+#endif
     connect(socket, SIGNAL(readyRead()), this, SLOT(readSocket()));
     connect(socket, SIGNAL(connected()), this, SLOT(connected()));
-    connect(socket, SIGNAL(disconnected()), this, SIGNAL(disconnected()));
+    connect(socket, SIGNAL(disconnected()), this, SLOT(disconnected()));   
 }
 
 void Bluetooth::sendMessage(const QString &message)
 {
     QByteArray text = message.toUtf8() + '\n';
-
-    //foreach (QBluetoothSocket *socket, clientSockets)
-    socket->write(text);
+    if (socket->state() == QBluetoothSocket::ConnectedState){
+        socket->write(text);
+    }
 }
 
+void Bluetooth::login()
+{
+    ////////    LOGIN PART //////////
+    request.queryType = LOGIN;
+//    if (request.ping_start){
+//        request.ping_start = false;
+////        signal(SIGALRM, &alarm_handler);  // set a signal handler
+////        alarm(1);
+////        request.ping_start = false;
+////        for (int i = 0; i< 15; i++){
+////            socket->write(request.login.toUtf8()+ '\n');
+////            usleep(100000);
+////            //readSocket();
+////            //if (response.line != "empty") break;
+////        }
+//    }
+#ifdef DEBUG
+    qDebug() << "\n HELLO FROM LOGIN!\n";
+#endif
+    socket->write(request.login.toUtf8()+ '\n');
+}
+
+void Bluetooth::getProperties(int type)
+{
+    if (type == ALL_CLOCKS){
+        request.queryType = ALL_CLOCKS;
+        sendMessage(request.getClocks);
+    }
+    else if (type == ALL_LIGHTS){
+        request.queryType = ALL_LIGHTS;
+        sendMessage(request.getLights);
+
+    }
+    else if (type == ALL_MUSIC){
+        request.queryType = ALL_MUSIC;
+        sendMessage(request.getMusic);
+
+    }
+}
+
+QString Bluetooth::getClockProperty(char index)
+{
+    return response.clock_prop[index];
+}
+QString Bluetooth::getLightProperty(char index)
+{
+    return response.light_prop[index];
+}
+QStringList Bluetooth::getMusicProperty()
+{
+    return response.music_list;
+}
+
+int Bluetooth::hexToInt( QString color, const int part)
+{
+    unsigned int intPart = 0;
+    unsigned int koef = 16;
+    int iter = 0;
+    foreach (QChar cc, color) {
+        if (iter == part || iter == part+1){
+            int c = cc.toLatin1();
+            intPart += (c - (( c > 57 )? 87 : '0'))*koef;
+            koef = 1;
+        }
+        iter++;
+    }
+    return intPart;
+}
+
+QString Bluetooth::intToHex(QString value)
+{
+    int val = value.toInt();
+    std::stringstream ss;
+    ss << std::hex << val;
+    QString res = QString::fromStdString(ss.str());
+    if (res.count() == 1)
+        res = "0" + res;
+    return res;
+}
 
 //////////////////////////////////////////////////////
 //================= USED SLOTS =====================//
@@ -74,43 +190,158 @@ void Bluetooth::addDevice(const QBluetoothDeviceInfo &info)
 
     _mac_address = info.address().toString();
 
-
     _device_found = true;
     emit device_foundChanged();
 }
 
 //SLOT TO discoveryAgent, SIGNAL(finished())
-void Bluetooth::scanFinished()
-{
-
+void Bluetooth::scanFinished(){
+#ifdef DEBUG
+    qDebug() << "SCANNING FINISHED, OK";
+#endif
 }
+
+//extern void alarm_handler(int sig){
+//    signal(SIGALRM, SIG_IGN);
+//    qDebug() << "ALARM HANDLER " << request.ping_count;
+//    if (request.ping_count++ < 11){
+//        signal(SIGALRM, alarm_handler);
+//        Bluetooth::login();
+//        alarm(1);
+//    }
+//    else {
+//        alarm(0); //off
+//    }
+//}
 
 void Bluetooth::readSocket()
 {
     QBluetoothSocket *socket = qobject_cast<QBluetoothSocket *>(sender());
     if (!socket)
         return;
-    QByteArray line = "";
+    response.line = "-";
     while (socket->canReadLine()) {
-        line = socket->readLine().trimmed();
-//        emit messageReceived(socket->peerName(),
-//                             QString::fromUtf8(line.constData(), line.length()));
+        response.line = socket->readLine().trimmed();
     }
-    if (line != ""){
-        qDebug() << "RECIEVED: " <<line;
+#ifdef DEBUG
+    //qDebug() << response.line;
+#endif
+    if (response.line != "-"){
 
-    //ПЛЯШЕМ И ПИХАЕМ ПО КЕЙСАМ:
-//    БУДИЛЬНИКИ
-//    МОДЫ
-//    НАСТРОЙКИ
-//        ЦВЕТ
-//        ПЕСНЯ
-//    МУЗЫКА
+        switch (request.queryType) {
+            case LOGIN:{
+                ///logged in case
+                if (response.line == "root@orangepizero:~# root"
+                        || response.line == "root: command not found"){
+#ifdef DEBUG
+                    qDebug() << "\n ALREADY LOGGED IN\n";
+#endif
+                    request.queryType = EMPTY;
+                    emit device_connected();
+                }
+                ///send password case
+                else if (response.line == ("orangepizero login: "+ request.login) ||
+                         response.line == request.login)
+                {
+                    socket->write(request.pass.toUtf8() + '\n');
+#ifdef DEBUG
+                    qDebug() << "\n send password case\n";
+#endif
+                    //request.queryType = EMPTY;
+                    //request.ping_start = true;
+                }
+                ///send login case
+                else if (response.line == "Login incorrect" ||
+                         response.line =="Password:" ||
+                         response.line =="Password:" + request.login)
+                {
+                    login();
+                    //socket->write(request.login.toUtf8() + '\n');
+#ifdef DEBUG
+                    qDebug() << "send login case";
+#endif
+                }
+                else{
+                    //login();
+                    //usleep(1000000);
+#ifdef DEBUG
+                    qDebug() << "else CASE";
+#endif
+                }
 
-
+                break;
+            }
+            case ALL_CLOCKS:{
+#ifdef DEBUG
+                qDebug() << "ALL_CLOCKS CASE: " << response.line;
+#endif
+                QString str = response.line;
+                if (str == "end"){
+#ifdef DEBUG
+                    qDebug() << "\n EOF \n";
+#endif
+                    request.queryType = EMPTY;
+                    emit eofClocks();
+                }
+                response.clock_prop = str.split(",", QString::SkipEmptyParts);
+#ifdef DEBUG
+                qDebug() << "Clocks length = " << response.clock_prop.length();
+#endif
+                if (response.clock_prop.length() == 10){
+                    emit nextClock_found();
+                }
+                break;
+            }
+            case ALL_LIGHTS:{
+#ifdef DEBUG
+                qDebug() << "ALL_LIGHTS CASE";
+#endif
+                QString str = response.line;
+                if (str == "end"){
+#ifdef DEBUG
+                    qDebug() << "\n EOF \n";
+#endif
+                    emit eofLights();
+                    request.queryType = EMPTY;
+                }
+                response.light_prop = str.split(",", QString::SkipEmptyParts);
+#ifdef DEBUG
+                    qDebug() << "Lights length = " << response.light_prop.length();
+#endif
+                if (response.light_prop.length() == 7){
+                    emit nextLight_found();
+                }
+                break;
+            }
+            case ALL_MUSIC:{
+#ifdef DEBUG
+                qDebug() << "ALL_MUSIC CASE";
+#endif
+                QString str = response.line;
+                response.music_list = str.split(",", QString::SkipEmptyParts);
+                break;
+            }
+            default:{
+#ifdef DEBUG
+                qDebug() << "EMPTY CASE in response read";
+#endif
+                break;
+            }
+        }
     }
 }
 
+void Bluetooth::connected(){
+#ifdef DEBUG
+    qDebug() << "\nCONNECTED SLOT!!!!\n";
+#endif
+    login();
+}
+void Bluetooth::disconnected(){
+#ifdef DEBUG
+    qDebug() << "DISCONNECTED SLOT!";
+#endif
+}
 
 //////////////////////////////////////////////////////
 //=============== UNUSED SLOTS =====================//
@@ -143,50 +374,29 @@ void Bluetooth::itemActivated(QString &item)
 
 }
 
-void Bluetooth::on_discoverable_clicked(bool clicked)
-{
-    if (clicked)
-        localDevice->setHostMode(QBluetoothLocalDevice::HostDiscoverable);
-    else
-        localDevice->setHostMode(QBluetoothLocalDevice::HostConnectable);
-}
-
-void Bluetooth::on_power_clicked(bool clicked)
-{
-    if (clicked)
-        localDevice->powerOn();
-    else
-        localDevice->setHostMode(QBluetoothLocalDevice::HostPoweredOff);
-}
-
 void Bluetooth::hostModeStateChanged(QBluetoothLocalDevice::HostMode mode)
 {
-    if (mode != QBluetoothLocalDevice::HostPoweredOff);
+    //if (mode != QBluetoothLocalDevice::HostPoweredOff);
 
-    if (mode == QBluetoothLocalDevice::HostDiscoverable);
+    //if (mode == QBluetoothLocalDevice::HostDiscoverable);
 
     //bool on = !(mode == QBluetoothLocalDevice::HostPoweredOff);
 }
 
-void Bluetooth::displayPairingMenu()
-{
-    QBluetoothAddress address (_mac_address);
-    if (true) {
-        localDevice->requestPairing(address, QBluetoothLocalDevice::Paired);
-    }
-    else{
-        localDevice->requestPairing(address, QBluetoothLocalDevice::Unpaired);
-    }
-}
-
-void Bluetooth::pairingDone(const QBluetoothAddress &address, QBluetoothLocalDevice::Pairing pairing)
+void Bluetooth::pairingDone(QBluetoothAddress addr,QBluetoothLocalDevice::Pairing pairing)
 {
 
     if (pairing == QBluetoothLocalDevice::Paired || pairing == QBluetoothLocalDevice::AuthorizedPaired ) {
         //DO SMTH WHEN PAIRED
+#ifdef DEBUG
+        qDebug() << "Paired!!" << addr.toString();
+#endif
     }
     else {
         //IF PAIRING FAILED
+#ifdef DEBUG
+        qDebug() << "Not Paired!!";
+#endif
     }
 }
 
@@ -213,11 +423,8 @@ void Bluetooth::serviceDiscoveryDialog( const QBluetoothAddress &address)
 
     serviceDiscoveryAgent->setRemoteAddress(address);
 
-    //setWindowTitle(name);
-
     connect(discoveryAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)),
             this, SLOT(addService(QBluetoothServiceInfo)));
-    //connect(discoveryAgent, SIGNAL(finished()), ui->status, SLOT(hide()));
 
     serviceDiscoveryAgent->start();
 }
@@ -232,8 +439,9 @@ void Bluetooth::addService(const QBluetoothServiceInfo &info)
         line.append("\n\t" + info.serviceDescription());
     if (!info.serviceProvider().isEmpty())
         line.append("\n\t" + info.serviceProvider());
-
+#ifdef DEBUG
     qDebug() << line;
+#endif
     //RETURN SERVICES HERE
 
 }
@@ -243,32 +451,18 @@ void Bluetooth::addService(const QBluetoothServiceInfo &info)
 //=========== GETTERS AND SETTERS ==================//
 //////////////////////////////////////////////////////
 
-QString Bluetooth::getMac_address()
-{
+QString Bluetooth::getMac_address(){
     return _mac_address;
 }
 
-QString Bluetooth::getDevice_name()
-{
+QString Bluetooth::getDevice_name(){
     return _device_name;
 }
 
-bool Bluetooth::getDevice_found()
-{
-    return _device_found;
-}
-
-void Bluetooth::setMac_address(const QString &mac)
-{
+void Bluetooth::setMac_address(const QString &mac){
     _mac_address = mac;
 }
 
-void Bluetooth::setDevice_name(const QString &name)
-{
+void Bluetooth::setDevice_name(const QString &name){
     _device_name = name;
-}
-
-void Bluetooth::setDevice_found(bool &b)
-{
-    _device_found = b;
 }
