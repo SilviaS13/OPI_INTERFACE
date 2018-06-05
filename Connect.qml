@@ -6,21 +6,17 @@ Page {
     width: 480
     height: 800
 
-    ////////////// FUNCTIONS ////////////////////////////
-    function login(){
-        console.log("QML LOGIN FCN \n")
-        //bluetoothctl.login(_message.login, _message.password);
+    // LIST REFRESH FCN -----------------------------------------------------------------
+    function devListRefresh(){
+        for (var i=devList.count -1; i>=0; i--) {
+            devList.remove(i);
+        }
+        for (var j=0; j < _devList._devMac.length; j++) {
+            devList.append({"name" : _devList._devName[j], "mac" : _devList._devMac[j]})
+        }
     }
 
-    function getAllClocks(){
-        console.log("QML GETALLCLOCKS FCN \n")
-       // bluetoothctl.sendMessage(_message.getClocks)
-    }
-
-    function getAllLights(){
-        console.log("QML GET ALL LIGHTS FCN \n")
-        //bluetoothctl.sendMessage(_message.getLights)
-    }
+    // ON CLICKED FUNCTIONS -------------------------------------------------------------
     function onConnectClicked(){
         bluetoothctl.scanFinished()
         bluetoothctl.connectToDevice(devProperties.connectMac)
@@ -38,6 +34,10 @@ Page {
         bluetoothctl.startScan()
     }
 
+    ///////////////////////////////////////
+    //============ UI PART ==============//
+    ///////////////////////////////////////
+
     header: Label {
             color: _header._color
             font.pixelSize: _header._fontPixelSize
@@ -45,25 +45,6 @@ Page {
             text: qsTr("Пристрої")
             font.family: _items._fontFamily
     }
-
-
-    //////////////// : REFRESH DEVICE TABLE
-    function devListRefresh(){
-        for (var i=devList.count -1; i>=0; i--) {
-            devList.remove(i);
-        }
-
-        for (var j=0; j < _devList._devMac.length; j++) {
-            devList.append({"name" : _devList._devName[j], "mac" : _devList._devMac[j]})
-        }
-    }
-//    GridView {
-//        id: gridView
-//        x: 84
-//        y: 457
-//        width: 312
-//        height: 239
-
 
     GridView{
         clip: true

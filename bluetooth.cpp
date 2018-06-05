@@ -1,24 +1,20 @@
 #include "bluetooth.h"
-//#include < signal.h >
 
 #define DEBUG  1
 
 enum settings{EMPTY = -1, LOGIN, ALL_CLOCKS, ALL_LIGHTS, ALL_MUSIC};
 
-//extern void alarm_handler(int);
 
 struct Response
 {
-    QByteArray prev_line;
-    QByteArray line;
+    QString line = "-";
     QStringList clock_prop;
     QStringList single_clock_prop;
     QStringList light_prop;
     QStringList single_light_prop;
     QStringList music_list;
     QStringList splitted_music_list;
-    char prop_counter;
-    bool recieved = false;
+    //bool recieved = false;
 }response;
 
 struct Request
@@ -31,11 +27,10 @@ struct Request
     QString getClocks = "cat "+ clocksPath;
     QString getLights = "cat " + lightsPath;
     QString getMusic = "cat " + musicPath;
+    QString echo = "echo ";
     QString login = "root";
     QString pass = "12345678";
-    char queryType = EMPTY;
-    bool ping_start = true;
-    volatile unsigned int ping_count = 0;
+    int queryType = EMPTY;
 }request;
 
 //////////////////////////////////////////////////////
@@ -43,7 +38,7 @@ struct Request
 //////////////////////////////////////////////////////
 
 Bluetooth::Bluetooth() : localDevice(new QBluetoothLocalDevice),
-                        discoveryAgent(new QBluetoothDeviceDiscoveryAgent),/*_device_found(false),*/
+                        discoveryAgent(new QBluetoothDeviceDiscoveryAgent),
                         socket(new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol))
 {
     connect(discoveryAgent, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)),
@@ -55,11 +50,16 @@ Bluetooth::Bluetooth() : localDevice(new QBluetoothLocalDevice),
     hostModeStateChanged(localDevice->hostMode());
 
     connect(localDevice, SIGNAL(pairingFinished(QBluetoothAddress,QBluetoothLocalDevice::Pairing)),
-            this, SLOT(pairingDone(QBluetoothAddress,QBluetoothLocalDevice::Pairing)));
-    response.prev_line = "";
-    response.prop_counter = 0;
+            this, SLOT(pairingDone(QBluetoothAddress,QBluetoothLocalDevice::Pairing)));    
 }
 
+void Bluetooth::sendMessage(const QString &message)
+{
+    QByteArray text = message.toUtf8() + '\n';
+    if (socket->state() == QBluetoothSocket::ConnectedState){
+        socket->write(text);
+    }
+}
 
 //////////////////////////////////////////////////////
 //=============== QML FUNCTIONS ====================//
@@ -90,14 +90,6 @@ void Bluetooth::connectToDevice(const QString &mac)
     connect(socket, SIGNAL(disconnected()), this, SLOT(disconnected()));
 }
 
-void Bluetooth::sendMessage(const QString &message)
-{
-    QByteArray text = message.toUtf8() + '\n';
-    if (socket->state() == QBluetoothSocket::ConnectedState){
-        socket->write(text);
-    }
-}
-
 void Bluetooth::login()
 {
     ////////    LOGIN PART //////////
@@ -111,21 +103,67 @@ void Bluetooth::login()
     sendMessage(request.login);
 }
 
+void Bluetooth::sendProperties(QString message, int type)
+{
+    QString command = request.echo + message + " >> " +
+            (type == ALL_CLOCKS ? request.clocksPath : request.lightsPath);
+#ifdef DEBUG
+    qDebug() << command;
+#endif
+    request.queryType = EMPTY;
+    sendMessage(command);
+}
+
+void Bluetooth::clearPropFile(int queryType)
+{
+    request.queryType = EMPTY;
+    switch (queryType) {
+    case ALL_CLOCKS:{
+#ifdef DEBUG
+    qDebug() << "CLEAR PROP ALL_CLOCKS";
+#endif
+        sendMessage(request.clearClocksFile);
+        break;
+    }
+    case ALL_LIGHTS:{
+#ifdef DEBUG
+        qDebug() << "CLEAR PROP ALL_LIGHTS";
+#endif
+        sendMessage(request.clearLightsFile);
+        break;
+    }
+    case ALL_MUSIC:{
+#ifdef DEBUG
+        qDebug() << "CLEAR PROP ALL_MUSIC";
+#endif
+        //////// DO SOMETHING /////////////
+        break;
+    }
+    default:
+#ifdef DEBUG
+        qDebug() << "CLEAR PROP DEFAULT CASE";
+#endif
+        break;
+    }
+}
+
 void Bluetooth::getProperties(int type)
 {
     if (type == ALL_CLOCKS){
+        response.clock_prop.clear();
         request.queryType = ALL_CLOCKS;
         sendMessage(request.getClocks);
     }
     else if (type == ALL_LIGHTS){
+        response.light_prop.clear();
         request.queryType = ALL_LIGHTS;
         sendMessage(request.getLights);
 
     }
     else if (type == ALL_MUSIC){
+        response.music_list.clear();
         request.queryType = ALL_MUSIC;
         sendMessage(request.getMusic);
-
     }
 }
 
@@ -133,13 +171,40 @@ QString Bluetooth::getClockProperty(char index)
 {
     return response.single_clock_prop[index];
 }
+
 QString Bluetooth::getLightProperty(char index)
 {
     return response.single_light_prop[index];
 }
+
 QStringList Bluetooth::getMusicProperty()
 {
     return response.music_list;
+}
+
+void Bluetooth::split_clocks(){
+
+    foreach (QString str, response.clock_prop) {
+        response.single_clock_prop = str.split(",", QString::SkipEmptyParts);
+#ifdef DEBUG
+        qDebug() << "Clocks length = " << response.single_clock_prop.length();
+#endif
+        if (response.single_clock_prop.length() == 10){
+            emit nextClock_found();
+        }
+    }
+}
+
+void Bluetooth::split_lights(){
+    foreach (QString str, response.light_prop) {
+        response.single_light_prop = str.split(",", QString::SkipEmptyParts);
+    #ifdef DEBUG
+            qDebug() << "Lights length = " << response.single_light_prop.length();
+    #endif
+        if (response.single_light_prop.length() == 7){
+            emit nextLight_found();
+        }
+    }
 }
 
 int Bluetooth::hexToInt( QString color, const int part)
@@ -188,39 +253,6 @@ void Bluetooth::addDevice(const QBluetoothDeviceInfo &info)
     emit device_foundChanged();
 }
 
-//SLOT TO discoveryAgent, SIGNAL(finished())
-void Bluetooth::scanFinished(){
-#ifdef DEBUG
-    qDebug() << "SCANNING FINISHED, OK";
-#endif
-}
-
-void Bluetooth::split_clocks(){
-
-    foreach (QString str, response.clock_prop) {
-        response.single_clock_prop = str.split(",", QString::SkipEmptyParts);
-#ifdef DEBUG
-        qDebug() << "Clocks length = " << response.single_clock_prop.length();
-#endif
-        if (response.single_clock_prop.length() == 10){
-            emit nextClock_found();
-        }
-    }
-}
-
-void Bluetooth::split_lights(){
-    foreach (QString str, response.light_prop) {
-        response.single_light_prop = str.split(",", QString::SkipEmptyParts);
-    #ifdef DEBUG
-            qDebug() << "Lights length = " << response.single_light_prop.length();
-    #endif
-        if (response.single_light_prop.length() == 7){
-            emit nextLight_found();
-        }
-    }
-}
-
-
 void Bluetooth::readSocket()
 {
     QBluetoothSocket *read_socket = qobject_cast<QBluetoothSocket *>(sender());
@@ -232,7 +264,7 @@ void Bluetooth::readSocket()
     while (read_socket->canReadLine()) {
         response.line = read_socket->readLine().trimmed();
 
-        if (response.line == "-")  return;
+        if (response.line == "-" ||request.queryType == EMPTY) return;
 
 #ifdef DEBUG
         qDebug() << response.line;
@@ -330,9 +362,18 @@ void Bluetooth::connected(){
 #endif
     login();
 }
+
+// !!!!!!!!!!! do smth with this. inform user about disconnected
 void Bluetooth::disconnected(){
 #ifdef DEBUG
     qDebug() << "DISCONNECTED SLOT!";
+#endif
+}
+
+//SLOT TO discoveryAgent, SIGNAL(finished())
+void Bluetooth::scanFinished(){
+#ifdef DEBUG
+    qDebug() << "SCANNING FINISHED, OK";
 #endif
 }
 
@@ -340,40 +381,13 @@ void Bluetooth::disconnected(){
 //=============== UNUSED SLOTS =====================//
 //////////////////////////////////////////////////////
 
-void Bluetooth::setGeneralUnlimited(bool unlimited)
-{
-    if (unlimited)
-        discoveryAgent->setInquiryType(QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry);
-    else
-        discoveryAgent->setInquiryType(QBluetoothDeviceDiscoveryAgent::LimitedInquiry);
-}
-
-void Bluetooth::itemActivated(QString &item)
-{
-    QString text = item;
-
-    //IF NOT PAIRED
-        //PAIR
-    int index = text.indexOf(' ');
-
-    if (index == -1)
-        return;
-    //PAIR OR CONNECT HERE
-
-    QBluetoothAddress address(text.left(index));
-    QString name(text.mid(index + 1));
-
-    serviceDiscoveryDialog(address);
-
-}
-
 void Bluetooth::hostModeStateChanged(QBluetoothLocalDevice::HostMode mode)
 {
-    //if (mode != QBluetoothLocalDevice::HostPoweredOff);
+    if (mode != QBluetoothLocalDevice::HostPoweredOff) return;
 
-    //if (mode == QBluetoothLocalDevice::HostDiscoverable);
+    if (mode == QBluetoothLocalDevice::HostDiscoverable) return;
 
-    //bool on = !(mode == QBluetoothLocalDevice::HostPoweredOff);
+    if (mode == QBluetoothLocalDevice::HostPoweredOff) return;
 }
 
 void Bluetooth::pairingDone(QBluetoothAddress addr,QBluetoothLocalDevice::Pairing pairing)
@@ -392,53 +406,6 @@ void Bluetooth::pairingDone(QBluetoothAddress addr,QBluetoothLocalDevice::Pairin
 #endif
     }
 }
-
-//////////////////////////////////////////////////////
-//=========== SERVICE DISCOVERING ==================//
-//////////////////////////////////////////////////////
-
-void Bluetooth::serviceDiscoveryDialog( const QBluetoothAddress &address)
-{
-    //Using default Bluetooth adapter
-    QBluetoothLocalDevice localDevice;
-    QBluetoothAddress adapterAddress = localDevice.address();
-
-    /*
-     * In case of multiple Bluetooth adapters it is possible to
-     * set which adapter will be used by providing MAC Address.
-     * Example code:
-     *
-     * QBluetoothAddress adapterAddress("XX:XX:XX:XX:XX:XX");
-     * discoveryAgent = new QBluetoothServiceDiscoveryAgent(adapterAddress);
-     */
-
-    serviceDiscoveryAgent = new QBluetoothServiceDiscoveryAgent(adapterAddress);
-
-    serviceDiscoveryAgent->setRemoteAddress(address);
-
-    connect(discoveryAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)),
-            this, SLOT(addService(QBluetoothServiceInfo)));
-
-    serviceDiscoveryAgent->start();
-}
-
-void Bluetooth::addService(const QBluetoothServiceInfo &info)
-{
-    if (info.serviceName().isEmpty())
-        return;
-
-    QString line = info.serviceName();
-    if (!info.serviceDescription().isEmpty())
-        line.append("\n\t" + info.serviceDescription());
-    if (!info.serviceProvider().isEmpty())
-        line.append("\n\t" + info.serviceProvider());
-#ifdef DEBUG
-    qDebug() << line;
-#endif
-    //RETURN SERVICES HERE
-
-}
-
 
 //////////////////////////////////////////////////////
 //=========== GETTERS AND SETTERS ==================//

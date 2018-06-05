@@ -2,19 +2,7 @@ import QtQuick 2.9
 import QtQuick.Controls 2.2
 import Bluetooth_Module 1.0
 
-Page {
-    width: 480
-    height: 800
-    /////////////////////////////
-    function onMusicDemoClicked(){
-        //bluetoothctl.sendMessage("")
-    }
-    function onMusicSaveClicked(){
-        _configs._clock[_enumC.music] = _musicList._songs[_musicList._curIndex];
-
-        config_form.fillConfigMusic();
-        tabBar.currentIndex = 2;
-    }
+Page {    
 
     function musicListRefresh(){
         for (var i=musicList.count -1; i>=0; i--) {
@@ -26,6 +14,24 @@ Page {
         }
     }
 
+    ////// LOCAL FUNCTIONS//////////////////////////////////////////////////////////////////
+    function onMusicDemoClicked(){
+        //bluetoothctl.sendMessage("")
+    }
+
+    function onMusicSaveClicked(){
+        _configs._clock[_enumC.music] = _musicList._songs[_musicList._curIndex];
+
+        config_form.fillConfigMusic(); ////EXCEPTION OF RULES/////
+        tabBar.currentIndex = 2;
+    }
+
+    ///////////////////////////////////////
+    //============ UI PART ==============//
+    ///////////////////////////////////////
+    width: 480
+    height: 800
+
     header: Label {
         color: _header._color
         font.pixelSize: _header._fontPixelSize
@@ -33,7 +39,6 @@ Page {
         text: qsTr("Вибір музики")
         font.family: _items._fontFamily
     }
-
 
     ScrollView {
         clip: true

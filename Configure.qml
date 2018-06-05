@@ -4,60 +4,16 @@ import Bluetooth_Module 1.0
 import QtQuick.Dialogs 1.0
 
 Page {
-    property string propertyString: ""
+    // EXTERNAL CALLING FCNS -------------------------------------------------------------------------
 
-    function getColor(color, part){
-        return bluetoothctl.hexToInt(qsTr(color), part);
-    }
-    ////// SAVE CONFIGS TO LIST OF CLOCKS/LIGHTS
-    function onSaveConfigClicked(){
-        var i=0;
-        if (_configs.mode === "c"){
-            _clockList._hrs[_configs.index] = _configs._clock[_enumC.hrs]
-            _clockList._mins[_configs.index] = _configs._clock[_enumC.mins]
-            _clockList._mode[_configs.index] = _configs._clock[_enumC.mode]
-            _clockList._r[_configs.index] = _configs._clock[_enumC.r]
-            _clockList._g[_configs.index] = _configs._clock[_enumC.g]
-            _clockList._b[_configs.index] = _configs._clock[_enumC.b]
-            _clockList._music[_configs.index] = _configs._clock[_enumC.music]
-            _clockList._music_e[_configs.index] = _configs._clock[_enumC.mus_e]
-            _clockList._demo[_configs.index] = _configs._clock[_enumC.demo]
-            time_form.clockListRefresh()
-            //bluetoothctl.sendMessage(_message.clearClocksFile)
-
-            for (i=0; i < _clockList._hrs.length; i++){
-                propertyString = _clockList._hrs[i] + ","+_clockList._mins[i]+","+
-                       _clockList._mode[i]+","+_clockList._r[i]+","+_clockList._g[i]+
-                        _clockList._b[i]+","+_clockList._music[i]+","+_clockList._music_e[i]+
-                        ","+_clockList._demo[i]+ _clockList.enabled[i];
-            }
-        }
-        else{
-            _lightsList._name[_configs.index] = _configs._light[_enumL.name]
-            _lightsList._mode[_configs.index] = _configs._light[_enumL.mode]
-            _lightsList._r[_configs.index] = _configs._light[_enumL.r]
-            _lightsList._g[_configs.index] = _configs._light[_enumL.g]
-            _lightsList._b[_configs.index] = _configs._light[_enumL.b]
-            _lightsList._demo[_configs.index] = _configs._light[_enumL.demo]
-            time_form.lightsListRefresh()
-            //bluetoothctl.sendMessage(_message.clearLightsFile)
-            for (i=0; i < _clockList._hrs.length; i++){
-                propertyString = _lightsList._name[i] + ","+
-                       _lightsList._mode[i]+","+_lightsList._r[i]+","+_lightsList._g[i]+
-                       _lightsList._b[i]+","+_lightsList._demo[i]+ _lightsList.enabled[i];
-            }
-
-        }
-        //bluetoothctl.sendMessage("");
-        tabBar.currentIndex = 1;
-    }
-
+    //from music form and changes music field
     function fillConfigMusic(){
         chMusic.text = _configs._clock[_enumC.music]
     }
+    //CALLS FROM TIME FORM AND FILLS LOCAL FIELDS
     function fillConfigFields(){
         //console.log("in fcn set configs")
-        if (_configs.mode === "c"){
+        if (_configs.mode === _configs.modeClock){
             lblTime.text = "Час"
             txtMinutes.visible = true;
             txtDot.visible = true;
@@ -94,24 +50,14 @@ Page {
         }
     }
 
-    ColorDialog {
-        id: colorDialog
-        title: "Please, choose a color..."
-        onAccepted: {
-            bgColor.color = colorDialog.color
-            changeConfiguration(getColor(""+bgColor.color, 1), "r");
-            changeConfiguration(getColor(""+bgColor.color, 3), "g");
-            changeConfiguration(getColor(""+bgColor.color, 5), "b");
-            close()
-        }
-        onRejected: {
-            console.log("Canceled")
-            close()
-        }
-        Component.onCompleted: visible = false
+    // LOCAL FUNCTIONS -------------------------------------------------------------------------
+
+    // GET INT RGB COLOR FROM HEX STRING COLOR
+    function getColor(color, part){
+        return bluetoothctl.hexToInt(qsTr(color), part);
     }
 
-    ////// SET FIELDS TO _CONFIGS
+    //SET FIELDS TO _CONFIGS - SINGLE PROPERTIES ITEM
     function changeConfiguration(conf, whatconfig){
         if (_configs.mode === 'c'){
             switch (whatconfig){
@@ -168,7 +114,7 @@ Page {
         }
     }
 
-    //////// CLEAR ALL RADIOBUTTONS//////////
+    // CLEAR ALL RADIOBUTTONS
     function rbClear(){
         rb0.checked = false
         rb1.checked = false
@@ -177,10 +123,52 @@ Page {
         rb4.checked = false
     }
 
+    // ON CLICKED FUNCTIONS-------------------------------------------------------------------------
+
+    function onAcceptedColor(){
+        bgColor.color = colorDialog.color
+        changeConfiguration(getColor(""+bgColor.color, 1), "r");
+        changeConfiguration(getColor(""+bgColor.color, 3), "g");
+        changeConfiguration(getColor(""+bgColor.color, 5), "b");
+    }
     function onMusicConfClicked(){
         music_form.musicListRefresh()
         tabBar.currentIndex = 3
     }
+    // SAVE CONFIGS TO LIST OF CLOCKS/LIGHTS
+    function onSaveConfigClicked(){
+        var type = -1;
+        if (_configs.mode === _configs.modeClock){
+            _clockList._hrs[_configs.index] = _configs._clock[_enumC.hrs]
+            _clockList._mins[_configs.index] = _configs._clock[_enumC.mins]
+            _clockList._mode[_configs.index] = _configs._clock[_enumC.mode]
+            _clockList._r[_configs.index] = _configs._clock[_enumC.r]
+            _clockList._g[_configs.index] = _configs._clock[_enumC.g]
+            _clockList._b[_configs.index] = _configs._clock[_enumC.b]
+            _clockList._music[_configs.index] = _configs._clock[_enumC.music]
+            _clockList._music_e[_configs.index] = _configs._clock[_enumC.mus_e]
+            _clockList._demo[_configs.index] = _configs._clock[_enumC.demo]
+
+            time_form.clockListRefresh()
+            type = _message.all_clocks
+        }
+        else{
+            _lightsList._name[_configs.index] = _configs._light[_enumL.name]
+            _lightsList._mode[_configs.index] = _configs._light[_enumL.mode]
+            _lightsList._r[_configs.index] = _configs._light[_enumL.r]
+            _lightsList._g[_configs.index] = _configs._light[_enumL.g]
+            _lightsList._b[_configs.index] = _configs._light[_enumL.b]
+            _lightsList._demo[_configs.index] = _configs._light[_enumL.demo]
+
+            time_form.lightsListRefresh()
+
+            type = _message.all_lights;
+        }
+        makeSolidStringsAndSend(type)
+        tabBar.currentIndex = 1;
+    }
+
+    //----------------------------------------------------------------------------------------------
 
     ///////////////////////////////////////////
     //============ UI ELEMENTS ==============//
@@ -198,6 +186,19 @@ Page {
         padding: 10
         text: qsTr("Налаштування")
         font.family: _items._fontFamily
+    }
+
+    ColorDialog {
+        id: colorDialog
+        title: "Please, choose a color..."
+        onAccepted: {
+            onAcceptedColor();
+            close()
+        }
+        onRejected: {
+            close()
+        }
+        Component.onCompleted: visible = false
     }
 
     ScrollView {

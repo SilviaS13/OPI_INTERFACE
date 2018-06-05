@@ -76,7 +76,7 @@ ApplicationWindow {
             if (type === _message.all_clocks){
                 _clockList._hrs.slice(0, _clockList._hrs.length);
                 _clockList._mins.slice(0, _clockList._mins.length);
-                _clockList._switchBtnImage.slice(0, _clockList._switchBtnImage.length);
+                _clockList.enable.slice(0, _clockList.enable.length);
                 _clockList._mode.slice(0, _clockList._mode.length);
                 _clockList._r.slice(0, _clockList._r.length);
                 _clockList._g.slice(0, _clockList._g.length);
@@ -87,7 +87,7 @@ ApplicationWindow {
             }
             else if (type === _message.all_lights){
                 _lightsList._name.slice(0, _lightsList._name.length);
-                _lightsList._switchBtnImage.slice(0, _lightsList._switchBtnImage.length);
+                _lightsList.enable.slice(0, _lightsList.enable.length);
                 _lightsList._mode.slice(0, _lightsList._mode.length);
                 _lightsList._r.slice(0, _lightsList._r.length);
                 _lightsList._g.slice(0, _lightsList._g.length);
@@ -97,7 +97,7 @@ ApplicationWindow {
         }
 
         function addClock(Hrs, Mins, Mode, R,G,B, Music,Mus_e,Enabled, Demo){
-            _clockList._switchBtnImage.push(Enabled === "t" ? _clockList.on : _clockList.off);
+            _clockList.enable.push(Enabled === "t" ? _clockList.on : _clockList.off);
             _clockList._hrs.push(Hrs);
             _clockList._mins.push(Mins);
             _clockList._mode.push(Mode);
@@ -109,7 +109,7 @@ ApplicationWindow {
             _clockList._demo.push(Demo);
         }
         function addLight(Name, Mode, R,G,B,Enabled,Demo){
-            _lightsList._switchBtnImage.push( Enabled === "t" ? _lightsList.on : _lightsList.off);
+            _lightsList.enable.push( Enabled === "t" ? _lightsList.on : _lightsList.off);
             _lightsList._name.push(Name);
             _lightsList._mode.push(Mode);
             _lightsList._r.push(R);
@@ -118,12 +118,37 @@ ApplicationWindow {
             _lightsList._demo.push(Demo);
         }
 
+        //SEND PROPERTIES TO OPI///////////////////////////////////////////////////////////////////////////////
+        function makeSolidStringsAndSend(type){
+            var i;
+            bluetoothctl.clearPropFile(type);
+            _message.propertyString = "";
+            if (type === _message.all_clocks){
+                for (i=0; i < _clockList._hrs.length; i++){
+                    _message.propertyString = _clockList._hrs[i] + ","+_clockList._mins[i]+","+
+                           _clockList._mode[i]+","+_clockList._r[i]+","+_clockList._g[i]+","+
+                            _clockList._b[i]+","+_clockList._music[i]+","+_clockList._music_e[i]+
+                            ","+_clockList._demo[i]+ "," + _clockList.enable[i];
+                    bluetoothctl.sendProperties(_message.propertyString, type);
+                }
+            }
+            else{
+                for (i=0; i < _lightsList._name.length; i++){
+                    _message.propertyString = _lightsList._name[i] + ","+
+                           _lightsList._mode[i]+","+_lightsList._r[i]+","+_lightsList._g[i]+ ","+
+                           _lightsList._b[i]+","+_lightsList._demo[i]+ "," +_lightsList.enable[i];
+                    bluetoothctl.sendProperties(_message.propertyString, type);
+                }
+            }
+            bluetoothctl.sendProperties("end", type);
+            console.log("PROPERTIES SENT " + type);
+        }
+
         //////////////////////////////////////////
         //============ PROPERTIES ==============//
         //////////////////////////////////////////
 
-        //////////////////////////////////////////////////////////////////////////////////////////////////
-        //ENUM FOR PROPERTIES
+        //ENUM FOR PROPERTIES////////////////////////////////////////////////////////////////////////////////////////////////////////////
         Item{
             id: _enumC
             property int hrs: 0;property int mins: 1; property int mode: 2; property int r: 3;
@@ -158,6 +183,7 @@ ApplicationWindow {
             property int all_clocks : 1;
             property int all_lights : 2;
             property int all_music : 3;
+            property string propertyString: ""
         }
 
         //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -174,8 +200,8 @@ ApplicationWindow {
         }
         Item{
             id: _clockList
-            property string on : _btnConf._imgSwitchOn;
-            property string off : _btnConf._imgSwitchOff;
+            property string on : "t"/*"_btnConf._imgSwitchOn";*/
+            property string off : "f"/*_btnConf._imgSwitchOff;*/
             property int _curIndex: 0
 
             property variant  _hrs: [/*"00", "00","07", "08"*/]
@@ -186,13 +212,13 @@ ApplicationWindow {
             property variant _b: [/*0, 120, 30, 0*/]
             property variant _music: [/*_musicList._songs[0], _musicList._songs[1],_musicList._songs[2], _musicList._songs[3]*/]
             property variant _music_e: [/*"t", "t", "f", "t"*/];
-            property variant _switchBtnImage: [/*on, off, on, on */]
+            property variant enable: [/*on, off, on, on */]
             property variant _demo: [/*"t", "f", "f", "f"*/]
         }
         Item{
             id: _lightsList
-            property string on : _btnConf._imgSwitchOn;
-            property string off : _btnConf._imgSwitchOff;
+            property string on : "t"/*_btnConf._imgSwitchOn;*/
+            property string off : "f"/*_btnConf._imgSwitchOff;*/
             property int _curIndex: 0
 
             property variant  _name: [/*"Режим1", "Режим2", "Режим3"*/]
@@ -200,7 +226,7 @@ ApplicationWindow {
             property variant _r: [/*3, 5, 30*/]
             property variant _g: [/*1, 10, 30*/ ]
             property variant _b: [/*8, 120, 30*/]
-            property variant _switchBtnImage: [/*on, off, off*/]
+            property variant enable: [/*on, off, off*/]
             property variant _demo: [/*"t", "f", "f"*/]
         }
         Item{
@@ -211,7 +237,9 @@ ApplicationWindow {
         Item{
             id: _configs
             property int index: -1;
-            property string mode: "c"
+            property string mode: modeClock
+            property string modeClock: "c"
+            property string modeLight: "l"
             property variant _clock: ["07", "00", mode[4], "120", "120", "40", _musicList._songs[3], "t", "f", "t"]
             property variant _light: ["New Mode", mode[4], "120", "120", "40", "f", "f"]
         }

@@ -29,19 +29,31 @@ class Bluetooth : public QObject
     Q_PROPERTY(QString device_name READ getDevice_name
                WRITE setDevice_name NOTIFY device_nameChanged)
 
-    //=====enums================================================================================
-//    Q_ENUMS(ClockSettings)
-//    Q_ENUMS(LightSettings)
-//    Q_ENUMS(MusicSettings)
-
 public:
     Bluetooth();
-    enum ClockSettings{Hours, Mins, Mode, R, G, B,
-                 Music, Mus_e,Enabled,Demo,};
-    enum LightSettings{Name, Mode_l, R_l, G_l, B_l,
-                       ENABLED_L,DemL};
-    enum MusicSettings{SONG_NAME, PATH};
 
+    //=====getters================================================================================
+    QString getMac_address();
+    QString getDevice_name();
+
+    //====setters=================================================================================
+    void setMac_address(const QString &mac);
+    void setDevice_name(const QString &name);
+
+    //====Q_INVOKABLE=============================================================================
+    Q_INVOKABLE void startScan();
+    Q_INVOKABLE void connectToDevice(const QString &mac);
+    Q_INVOKABLE void login();
+    Q_INVOKABLE void getProperties(int type);
+    Q_INVOKABLE QString getClockProperty(char index);
+    Q_INVOKABLE QString getLightProperty(char index);
+    Q_INVOKABLE QStringList getMusicProperty();
+    Q_INVOKABLE int hexToInt(QString color, const int part);
+    Q_INVOKABLE QString intToHex(QString value);
+    Q_INVOKABLE void split_clocks();
+    Q_INVOKABLE void split_lights();
+    Q_INVOKABLE void sendProperties(QString message, int type);
+    Q_INVOKABLE void clearPropFile(int queryType);
 
 signals:
     void mac_addressChanged();
@@ -54,52 +66,20 @@ signals:
     void eofLights();
 
 public slots:
-    void connectToDevice(const QString &mac);
     void addDevice(const QBluetoothDeviceInfo&);
-//    void on_power_clicked(bool clicked);
-//    void on_discoverable_clicked(bool clicked);
+    void scanFinished();
     void pairingDone(QBluetoothAddress, QBluetoothLocalDevice::Pairing);
     void connected();
     void disconnected();
-    //void pairingDone(QBluetoothLocalDevice::Pairing);
-
-    //===helper functions==========================================================================
     void readSocket();
-    void scanFinished();
-    void setGeneralUnlimited(bool unlimited);
-    void itemActivated(QString &item);
     void hostModeStateChanged(QBluetoothLocalDevice::HostMode);
-    void addService(const QBluetoothServiceInfo&);
-    void serviceDiscoveryDialog(const QBluetoothAddress &address);
-
-public:
-    //=====getters================================================================================
-    QString getMac_address();
-    QString getDevice_name();
-
-    //====setters=================================================================================
-    void setMac_address(const QString &mac);
-    void setDevice_name(const QString &name);
-
-    //====Q_INVOKABLE=============================================================================
-    Q_INVOKABLE void startScan();
-    Q_INVOKABLE void login();
-    Q_INVOKABLE void getProperties(int type);
-    Q_INVOKABLE void sendMessage(const QString &message);
-    Q_INVOKABLE QString getClockProperty(char index);
-    Q_INVOKABLE QString getLightProperty(char index);
-    Q_INVOKABLE QStringList getMusicProperty();
-    Q_INVOKABLE int hexToInt(QString color, const int part);
-    Q_INVOKABLE QString intToHex(QString value);
-//    Q_INVOKABLE void buildClockConfigString();
-//    Q_INVOKABLE void buildLightConfigString();
-    Q_INVOKABLE void split_clocks();
-    Q_INVOKABLE void split_lights();
 
 private:
+    void sendMessage(const QString &message);
+
     QBluetoothDeviceDiscoveryAgent *discoveryAgent;
     QBluetoothServiceDiscoveryAgent* serviceDiscoveryAgent;
-    QBluetoothLocalDevice *localDevice = new QBluetoothLocalDevice;
+    QBluetoothLocalDevice *localDevice;
     QBluetoothSocket *socket;
 
     QString _mac_address;

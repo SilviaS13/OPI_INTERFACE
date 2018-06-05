@@ -1,34 +1,24 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.2
-
 import Bluetooth_Module 1.0
-
-
-//import ClockSettings 1.0
-//import LightSettings 1.0
-//import MusicSettings 1.0
-
 
 Page {
     width: 480
     height: 800
-
     /////////////////////////////////////////
-    //============ FUNCTIONS ==============//
+    //============FUNCTIONS ==============//
     /////////////////////////////////////////
 
-    //REFRESH CLOCKS LIST
+    // refresh fcns -------------------------------------------------------------------------------------
     function clockListRefresh(){
         for (var i= clockList.count -1; i>=0; i--) {
             clockList.remove(i);
         }
-
         for (var j=0; j < _clockList._hrs.length; j++) {
-            clockList.append({"name" : (qsTr(_clockList._hrs[j]) + ":"+qsTr(_clockList._mins[j]))})
+            clockList.append({"name" : (qsTr(_clockList._hrs[j]) +
+                                        ":"+qsTr(_clockList._mins[j]))})
         }
     }
-
-    //REFRESH LIGHTS LIST
     function lightsListRefresh(){
         for (var i=lightList.count -1; i>=0; i--) {
             lightList.remove(i);
@@ -39,15 +29,19 @@ Page {
         }
     }
 
-    ///////clock add del buttons/////////////////////////////////////////////////////////////
+
+
+
+    // add AND  del buttons--------------------------------------------------------
     function addClockClicked(){
+        addClock("07", "00", mode[4], "120", "120", "40",
+                 _musicList._songs[0], "t", "f", "t");
+        clockListRefresh();
 
-        addClock("07", "00", mode[4], "120", "120", "40", _musicList._songs[0], "t", "f", "t")
-
-        time_form.clockListRefresh();
+        makeSolidStringsAndSend(_message.all_clocks);
     }
     function deleteClockClicked(){
-        _clockList._switchBtnImage.splice(_clockList._curIndex, 1)
+        _clockList.enable.splice(_clockList._curIndex, 1)
         _clockList._hrs.splice(_clockList._curIndex, 1)
         _clockList._mins.splice(_clockList._curIndex, 1)
         _clockList._mode.splice(_clockList._curIndex, 1)
@@ -57,16 +51,20 @@ Page {
         _clockList._music.splice(_clockList._curIndex, 1)
         _clockList._music_e.splice(_clockList._curIndex, 1)
         _clockList._demo.splice(_clockList._curIndex, 1)
+
         clockListRefresh()
+
+        makeSolidStringsAndSend(_message.all_clocks);
     }
 
     ////////light add del buttons///////////////////////////////////////////////////////////////////////
     function addLightClicked(){
         addLight("New Mode", mode[4], "120", "120", "40", "f", "f")
         lightsListRefresh()
+        makeSolidStringsAndSend(_message.all_lights);
     }
     function deleteLightClicked(){
-        _lightsList._switchBtnImage.splice(_lightsList._curIndex, 1)
+        _lightsList.enable.splice(_lightsList._curIndex, 1)
         _lightsList._name.splice(_lightsList._curIndex, 1)
         _lightsList._mode.splice(_lightsList._curIndex, 1)
         _lightsList._r.splice(_lightsList._curIndex, 1)
@@ -74,35 +72,38 @@ Page {
         _lightsList._b.splice(_lightsList._curIndex, 1)
         _lightsList._demo.splice(_lightsList._curIndex, 1)
         lightsListRefresh()
+
+        makeSolidStringsAndSend(_message.all_lights);
     }
 
     function onBtnClockEnabledClicked(index){
-        if (_clockList._switchBtnImage[index] === _clockList.on){
-            _clockList._switchBtnImage[index] = _clockList.off
+        if (_clockList.enable[index] === _clockList.on){
+            _clockList.enable[index] = _clockList.off
         }
         else{
-            _clockList._switchBtnImage[index] = _clockList.on
+            _clockList.enable[index] = _clockList.on
         }
         clockListRefresh();
+        makeSolidStringsAndSend(_message.all_clocks);
     }
-
     function onBtnLightEnabledClicked(index){
-        if (_lightsList._switchBtnImage[index] === _lightsList.on){
-            _lightsList._switchBtnImage[index] = _lightsList.off
+        if (_lightsList.enable[index] === _lightsList.on){
+            _lightsList.enable[index] = _lightsList.off
         }
         else{
-            for (var i=0; i <_lightsList._switchBtnImage.count; i++){
-                _lightsList._switchBtnImage[i] = _lightsList.off
+            for (var i=0; i <_lightsList.enable.count; i++){
+                _lightsList.enable[i] = _lightsList.off
             }
-            _lightsList._switchBtnImage[index] = _lightsList.on
+            _lightsList.enable[index] = _lightsList.on
         }
         lightsListRefresh()
+        makeSolidStringsAndSend(_message.all_lights);
     }
     //// FILL THE CONFIG TAB WITH PROPERTIES
     function onConfigClicked(index, mode){
         _configs.mode = mode
         _configs.index = index
-        if (_configs.mode === "c"){
+        if (_configs.mode === _configs.modeClock){
             _configs._clock[_enumC.hrs] = _clockList._hrs[_configs.index]
             _configs._clock[_enumC.mins] =  _clockList._mins[_configs.index]
             _configs._clock[_enumC.mode] = _clockList._mode[_configs.index]
@@ -124,17 +125,11 @@ Page {
         config_form.fillConfigFields();
         tabBar.currentIndex = 2;
     }
-    //////////////////////////////////////////
-    //============ PROPERTIES ==============//
-    //////////////////////////////////////////
-
-
-
-
 
     ///////////////////////////////////////////
     //============ UI ELEMENTS ==============//
     ///////////////////////////////////////////
+
     header: Label {
             color: _header._color
             font.pixelSize: _header._fontPixelSize
@@ -261,7 +256,7 @@ Page {
                                             fillMode: Image.PreserveAspectFit
                                             sourceSize.height: 0
                                             sourceSize.width: 0
-                                            source: encodeURIComponent(_clockList._switchBtnImage[index])
+                                            source: (_clockList.enable[index] === _clockList.on ? _btnConf._imgSwitchOn: _btnConf._imgSwitchOff)
                                         }
                                         onClicked: {
                                               onBtnClockEnabledClicked(index)
@@ -283,7 +278,7 @@ Page {
                                             source: _btnConf._imgSettings
                                         }
                                         onClicked: {
-                                            onConfigClicked(index, "c");
+                                            onConfigClicked(index, _configs.modeClock);
                                         }
                                     }
                                 }
@@ -400,7 +395,7 @@ Page {
                                             sourceSize.width: 0
                                             sourceSize.height: 0
                                             fillMode: Image.PreserveAspectFit
-                                            source: _lightsList._switchBtnImage[index]
+                                            source: (_lightsList.enable[index] === _lightsList.on ? _btnConf._imgSwitchOn: _btnConf._imgSwitchOff)
                                         }
                                         onClicked: {
                                             onBtnLightEnabledClicked(index);
@@ -422,7 +417,7 @@ Page {
                                             source: _btnConf._imgSettings
                                         }
                                         onClicked: {
-                                            onConfigClicked(index, "l");
+                                            onConfigClicked(index, _configs.modeLight);
                                         }
                                     }
                                 }
