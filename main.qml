@@ -106,7 +106,7 @@ ApplicationWindow {
             _clockList._b.push(B);
             _clockList._music.push(Music);
             _clockList._music_e.push(Mus_e);
-            _clockList._demo.push(Demo);
+            _clockList._demo.push("f");
         }
         function addLight(Name, Mode, R,G,B,Enabled,Demo){
             _lightsList.enable.push( Enabled === "t" ? _lightsList.on : _lightsList.off);
@@ -115,7 +115,7 @@ ApplicationWindow {
             _lightsList._r.push(R);
             _lightsList._g.push(G);
             _lightsList._b.push(B);
-            _lightsList._demo.push(Demo);
+            _lightsList._demo.push("f");
         }
 
         //SEND PROPERTIES TO OPI///////////////////////////////////////////////////////////////////////////////

@@ -99,11 +99,8 @@ Page {
                                         font.bold: true
                                         font.pointSize: _list._fontNamePixelSize
                                         font.family: _items._fontFamily
-
                                     }
-
-
-                                }
+                                    }
                                 }
                             }
                         }

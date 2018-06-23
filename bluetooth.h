@@ -54,6 +54,7 @@ public:
     Q_INVOKABLE void split_lights();
     Q_INVOKABLE void sendProperties(QString message, int type);
     Q_INVOKABLE void clearPropFile(int queryType);
+    Q_INVOKABLE void setPingStart();
 
 signals:
     void mac_addressChanged();

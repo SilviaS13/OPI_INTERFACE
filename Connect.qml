@@ -19,6 +19,7 @@ Page {
     // ON CLICKED FUNCTIONS -------------------------------------------------------------
     function onConnectClicked(){
         bluetoothctl.scanFinished()
+        bluetoothctl.setPingStart();
         bluetoothctl.connectToDevice(devProperties.connectMac)
     }
 

@@ -31,6 +31,10 @@ Page {
                             bluetoothctl.intToHex(_configs._clock[_enumC.g])+
                             bluetoothctl.intToHex(_configs._clock[_enumC.b]);
             fillConfigMusic();
+
+            txtHours.inputMethodHints = Qt.ImhDigitsOnly
+            txtMinutes.inputMethodHints = Qt.ImhDigitsOnly
+
         }
         else{
             lblTime.text = "Назва"
@@ -47,7 +51,9 @@ Page {
             bgColor.color = "#"+bluetoothctl.intToHex(_configs._light[_enumL.r])+
                     bluetoothctl.intToHex(_configs._light[_enumL.g])+
                     bluetoothctl.intToHex(_configs._light[_enumL.b]);
+            txtHours.inputMethodHints = Qt.ImhUrlCharactersOnly
         }
+        txtDemo.text = "Демонстрація (ВИКЛ)"
     }
 
     // LOCAL FUNCTIONS -------------------------------------------------------------------------
@@ -165,6 +171,13 @@ Page {
             type = _message.all_lights;
         }
         makeSolidStringsAndSend(type)
+        if (_configs.mode === _configs.modeClock){
+            _clockList._demo[_configs.index] = _configs._clock[_enumC.demo] = "f"
+        }
+        else{
+             _lightsList._demo[_configs.index] = _configs._light[_enumL.demo] = "f"
+        }
+
         tabBar.currentIndex = 1;
     }
 
@@ -248,6 +261,7 @@ Page {
                         color: _configTab._colorOfTime
                         text: qsTr("07")
                         font.pixelSize: _configTab._timePixelSize
+                        inputMethodHints: Qt.ImhDigitsOnly
                         onTextChanged: {
                             changeConfiguration(txtHours.text, "hrs")
                         }
@@ -270,6 +284,9 @@ Page {
                         anchors.verticalCenter: parent.verticalCenter
                         font.pixelSize: _configTab._timePixelSize
                         font.family: _items._fontFamily
+                        onTextChanged: {
+                            console.log("CHECK HOURS!! \n")
+                        }
                     }
                 }
                 Rectangle{
@@ -281,14 +298,13 @@ Page {
                         id: txtMinutes
                         color: _configTab._colorOfTime
                         text: qsTr("45")
-
+                        inputMethodHints: Qt.ImhDigitsOnly
                         font.pixelSize: _configTab._timePixelSize
                         onTextChanged: {
                            changeConfiguration(txtMinutes.text, "mins")
                         }
                     }
                 }
-
             }
 
             Row {
@@ -449,6 +465,7 @@ Page {
                         anchors.fill: parent
                     }
                     Label{
+                        id: txtDemo
                         text: qsTr("Демонстрація")
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.verticalCenter: parent.verticalCenter
@@ -462,7 +479,10 @@ Page {
                     topPadding: 6
                     focusPolicy: Qt.NoFocus
                     onClicked: {
+                        //onBtnDemoClicked();
                         //todo
+                        changeConfiguration("t","demo");
+                        txtDemo.text = "Демонстрація (ВКЛ)";
                     }
                 }
             }

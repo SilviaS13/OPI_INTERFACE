@@ -14,7 +14,6 @@ struct Response
     QStringList single_light_prop;
     QStringList music_list;
     QStringList splitted_music_list;
-    //bool recieved = false;
 }response;
 
 struct Request
@@ -31,6 +30,7 @@ struct Request
     QString login = "root";
     QString pass = "12345678";
     int queryType = EMPTY;
+    bool ping_start = false;
 }request;
 
 //////////////////////////////////////////////////////
@@ -94,9 +94,12 @@ void Bluetooth::login()
 {
     ////////    LOGIN PART //////////
     request.queryType = LOGIN;
-//    if (request.ping_start){
-//        request.ping_start = false;
-//    }
+    if (request.ping_start){
+        for(int i=0; i<10; i++){
+            sendMessage("");
+        }
+        request.ping_start = false;
+    }
 #ifdef DEBUG
     qDebug() << "\n HELLO FROM LOGIN!\n";
 #endif
@@ -145,6 +148,11 @@ void Bluetooth::clearPropFile(int queryType)
 #endif
         break;
     }
+}
+
+void Bluetooth::setPingStart()
+{
+    request.ping_start = true;
 }
 
 void Bluetooth::getProperties(int type)
